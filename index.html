@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calendar</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header id="header">
+        <h1>Calendar</h1>
+    </header>
+    <main id="calendar">
+        <div id="Time" class="daytime">            
+        </div>
+        <div id="Monday" class="day">           
+        </div>
+        <div id="Tuesday" class="day">           
+        </div>
+        <div id="Wednesday" class="day">           
+        </div>
+        <div id="Thursday" class="day">            
+        </div>
+        <div id="Friday" class="day">           
+        </div>
+        <div id="Saturday" class="day">            
+        </div>
+        <div id="Sunday" class="day">           
+        </div>
+    </main>
+    <form id="eventModal">
+        <h2 id="modalTitle">
+        </h2>
+        <label class="descriptor">Time</label>
+        <div>
+            <span id="eventDay"></span>, <span id="eventHour"></span></span>
+        </div>
+        <label class="descriptor">Title</label>
+        <div>
+            <input type="text" id="eventTitle"></input>
+        </div>
+        <label>
+            Description
+        </label>
+        <div>
+            <textarea id="eventDescription">
+            </textarea>
+        </div>        
+        <label>
+            Color
+        </label>
+        <div id="colors">
+            <div class="color" data-color="red"></div>
+            <div class="color" data-color="blue"></div>
+            <div class="color" data-color="green"></div>
+            <div class="color" data-color="orange"></div>
+        </div>      
+        <div id="controls">
+            <input type="submit" value="Submit" class="button" id="submitButton">
+            <input type="button" value="Cancel" class="button" id="cancelButton">
+            <input type="button" value="Delete" class="button" id="deleteButton">
+        </div>
+        
+        <div id="errors">
+
+        </div>
+    </form>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script src="main.js" type="module"></script>
+</body>
+</html>
