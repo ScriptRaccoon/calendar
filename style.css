@@ -39,7 +39,11 @@ body {
 #calendar {
     display: flex;
     width: 100%;
-    transition: all 300ms linear;
+    transition: opacity 300ms linear;
+}
+
+#calendar.opaque {
+    opacity: 0.3;
 }
 
 /* columns */
@@ -51,7 +55,7 @@ body {
 
 .daytime {
     width: 100%;
-    min-width: 60px;
+    min-width: 100px;
     max-width: 100px;
     text-align: center;
     color: #555;

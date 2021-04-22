@@ -4,6 +4,12 @@ let currentEvent = null;
 const dateOptions = { month: "2-digit", day: "2-digit", year: "numeric" };
 let weekStart, weekEnd;
 
+let events = [];
+
+function getEventById(id) {
+    return events.find((ev) => ev.id == id);
+}
+
 $(() => {
     setupCalendar();
     $(".slot").click(handleClick);
@@ -11,22 +17,23 @@ $(() => {
 });
 
 function setupCalendar() {
-    $("#calendar > *").each(function () {
+    $("#calendar > *").each(function (index) {
         const name = this.id;
         const isDay = $(this).hasClass("day");
         const header = $("<div></div>").addClass("columnHeader").text(name);
         const slots = $("<div></div>").addClass("slots");
         for (let hour = 0; hour < 24; hour++) {
-            $("<div></div>")
-                .addClass(isDay ? "slot" : "time")
-                .attr("data-day", name)
-                .attr("data-hour", hour)
-                .text(isDay ? "" : hour + ":00 - " + (parseInt(hour) + 1) + ":00")
-                .appendTo(slots);
+            const slot = $("<div></div>").attr("data-hour", hour).appendTo(slots);
+            if (isDay) {
+                slot.addClass("slot").attr("data-dayIndex", index - 1);
+            } else {
+                slot.addClass("time").text(
+                    hour + ":00 - " + (parseInt(hour) + 1) + ":00"
+                );
+            }
         }
         $(this).append(header).append(slots);
         getCurrentWeek();
-        showWeek();
     });
 }
 
@@ -40,13 +47,20 @@ function handleClick() {
     if (mode != "view") return;
     const slot = $(this);
     mode = slot.hasClass("booked") ? "edit" : "create";
-    const hour = slot.attr("data-hour");
-    const day = slot.attr("data-day");
-    currentEvent = { hour, day, slot };
+    if (mode == "create") {
+        const hour = slot.attr("data-hour");
+        const start = hour.padStart(2, "0") + ":00";
+        const end = ((parseInt(hour) + 1) % 24).toString().padStart(2, "0") + ":00";
+        const dayIndex = slot.attr("data-dayIndex");
+        const date = new Date(weekStart.getTime() + dayIndex * 24 * 60 * 60 * 1000);
+        currentEvent = { start, end, date };
+    }
     if (mode == "edit") {
-        currentEvent.title = slot.attr("data-title");
-        currentEvent.description = slot.attr("data-description");
-        currentEvent.color = slot.attr("data-color");
+        const id = slot.attr("event-id");
+        currentEvent = getEventById(id);
+        // currentEvent.title = slot.attr("data-title");
+        // currentEvent.description = slot.attr("data-description");
+        // currentEvent.color = slot.attr("data-color");
     }
     openModal();
 }
@@ -54,16 +68,15 @@ function handleClick() {
 function openModal() {
     const modalTitle = mode == "edit" ? "Edit your event" : "Create a new event";
     $("#modalTitle").text(modalTitle);
-    $("#eventDay").text(currentEvent.day);
-    $("#eventHour").text(
-        currentEvent.hour + ":00 - " + (parseInt(currentEvent.hour) + 1) + ":00"
-    );
+    $("#eventDate").val(dateString(currentEvent.date));
+    $("#eventStart").val(currentEvent.start);
+    $("#eventEnd").val(currentEvent.end);
     if (mode == "edit") {
         $("#deleteButton").show();
         $("#eventTitle").val(currentEvent.title);
         $("#eventDescription").val(currentEvent.description);
         $(`.color[data-color=${currentEvent.color}]`).addClass("active");
-    } else {
+    } else if (mode == "create") {
         $("#deleteButton").hide();
         $(".color").removeClass("active");
         $(".color[data-color=red]").addClass("active");
@@ -72,26 +85,28 @@ function openModal() {
     }
     $("#eventModal").fadeIn("fast");
     $("#eventTitle").focus();
-    $("#calendar").css("opacity", "0.3");
+    $("#calendar").addClass("opaque");
 }
 
 function closeModal() {
     $("#eventModal").hide();
     $("#errors").text("");
     mode = "view";
-    $("#calendar").css("opacity", "1");
+    $("#calendar").removeClass("opaque");
 }
 
 $("#cancelButton").click(closeModal);
 
 $("#deleteButton").click(() => {
-    currentEvent.slot
-        .removeClass("booked")
-        .text("")
-        .removeAttr("data-color")
-        .removeAttr("data-title")
-        .removeAttr("data-description")
-        .css("backgroundColor", "transparent");
+    events = events.filter((ev) => ev.id != currentEvent.id);
+
+    // currentEvent.slot
+    //     .removeClass("booked")
+    //     .text("")
+    //     .removeAttr("data-color")
+    //     .removeAttr("data-title")
+    //     .removeAttr("data-description")
+    //     .css("backgroundColor", "transparent");
     closeModal();
 });
 
@@ -102,6 +117,9 @@ $("#eventModal").submit((e) => {
         $("#errors").text("There is no title");
         return;
     }
+    currentEvent.date = $("#eventDate").val();
+    currentEvent.start = $("#eventStart").val();
+    currentEvent.end = $("#eventEnd").val();
     currentEvent.description = $("#eventDescription").val();
     currentEvent.color = $(`.color.active`).attr("data-color");
     $("#eventTitle").val("");
@@ -111,16 +129,23 @@ $("#eventModal").submit((e) => {
 });
 
 function createEvent() {
-    currentEvent.slot
-        .addClass("booked")
-        .text(currentEvent.title)
-        .attr("data-title", currentEvent.title)
-        .attr("data-description", currentEvent.description)
-        .attr("data-color", currentEvent.color)
-        .css(
-            "backgroundColor",
-            $(`.color[data-color=${currentEvent.color}]`).css("backgroundColor")
-        );
+    if (mode == "create") {
+        currentEvent.id = events.length + 1;
+        events.push(currentEvent);
+        console.log(events);
+    }
+
+    // currentEvent.slot
+    //     .addClass("booked")
+    //     .text(currentEvent.title)
+    //     .attr("data-title", currentEvent.title)
+    //     .attr("")
+    //     .attr("data-description", currentEvent.description)
+    //     .attr("data-color", currentEvent.color)
+    //     .css(
+    //         "backgroundColor",
+    //         $(`.color[data-color=${currentEvent.color}]`).css("backgroundColor")
+    //     );
 }
 
 $(".color").click(function () {
@@ -149,9 +174,16 @@ function getCurrentWeek() {
     const firstDay = currentDate.getDate() - currentDate.getDay() + 1;
     weekStart = new Date(currentDate.setDate(firstDay));
     weekEnd = new Date(currentDate.setDate(firstDay + 6));
+    showWeek();
 }
 
 function showWeek() {
     $("#weekStartDisplay").text(weekStart.toLocaleDateString(undefined, dateOptions));
     $("#weekEndDisplay").text(weekEnd.toLocaleDateString(undefined, dateOptions));
+}
+
+function dateString(date) {
+    return `${date.getFullYear()}-${(date.getMonth() + 1)
+        .toString()
+        .padStart(2, "0")}-${date.getDate().toString().padStart(2, "0")}`;
 }
