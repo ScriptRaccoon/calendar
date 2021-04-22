@@ -5,10 +5,20 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Calendar</title>
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" />
+    <link rel="stylesheet" href="style.css">    
 </head>
 <body>
     <header id="header">
+        <div id="weekDisplay">
+            <i id="prevWeekBtn" class="fas fa-angle-double-left"></i>
+            <span>
+                <span id="weekStartDisplay"></span>
+                 - 
+                 <span id="weekEndDisplay"></span>
+            </span>            
+            <i id="nextWeekBtn" class="fas fa-angle-double-right"></i>
+        </div>
         <h1>Calendar</h1>
     </header>
     <main id="calendar">
@@ -32,9 +42,13 @@
     <form id="eventModal">
         <h2 id="modalTitle">
         </h2>
+        <label class="descriptor">Date</label>
+        <div>
+            <input type="date" id="eventDay"></input>
+        </div>
         <label class="descriptor">Time</label>
         <div>
-            <span id="eventDay"></span>, <span id="eventHour"></span></span>
+            <input type="time" id="eventStart"></input>-<input type="time" id="eventEnd"></input></span>
         </div>
         <label class="descriptor">Title</label>
         <div>

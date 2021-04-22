@@ -1,6 +1,9 @@
 let mode = "view";
 let currentEvent = null;
 
+const dateOptions = { month: "2-digit", day: "2-digit", year: "numeric" };
+let weekStart, weekEnd;
+
 $(() => {
     setupCalendar();
     $(".slot").click(handleClick);
@@ -22,6 +25,8 @@ function setupCalendar() {
                 .appendTo(slots);
         }
         $(this).append(header).append(slots);
+        getCurrentWeek();
+        showWeek();
     });
 }
 
@@ -123,3 +128,30 @@ $(".color").click(function () {
     $(this).addClass("active");
     currentEvent.color = $(this).attr("data-color");
 });
+
+$("#nextWeekBtn").click(() => {
+    changeWeek(1);
+});
+
+$("#prevWeekBtn").click(() => {
+    changeWeek(-1);
+});
+
+function changeWeek(number) {
+    const offset = number * 1000 * 60 * 60 * 24 * 7;
+    weekStart = new Date(weekStart.getTime() + offset);
+    weekEnd = new Date(weekEnd.getTime() + offset);
+    showWeek();
+}
+
+function getCurrentWeek() {
+    const currentDate = new Date();
+    const firstDay = currentDate.getDate() - currentDate.getDay() + 1;
+    weekStart = new Date(currentDate.setDate(firstDay));
+    weekEnd = new Date(currentDate.setDate(firstDay + 6));
+}
+
+function showWeek() {
+    $("#weekStartDisplay").text(weekStart.toLocaleDateString(undefined, dateOptions));
+    $("#weekEndDisplay").text(weekEnd.toLocaleDateString(undefined, dateOptions));
+}
