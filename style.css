@@ -5,6 +5,10 @@
     --time-color: #777;
     --slot-hover-color: #eee;
     --shadow-color: rgba(0, 0, 0, 0.3);
+    --color-red: rgb(190, 35, 15);
+    --color-blue: rgb(54, 92, 175);
+    --color-green: rgb(21, 129, 21);
+    --color-orange: rgb(233, 153, 4);
 }
 
 * {
@@ -222,17 +226,17 @@ textarea {
 }
 
 .color-red {
-    background-color: rgb(190, 35, 15);
+    background-color: var(--color-red);
 }
 
 .color-blue {
-    background-color: rgb(54, 92, 175);
+    background-color: var(--color-blue);
 }
 
 .color-green {
-    background-color: rgb(21, 129, 21);
+    background-color: var(--color-green);
 }
 
 .color-orange {
-    background-color: rgb(233, 153, 4);
+    background-color: var(--color-orange);
 }

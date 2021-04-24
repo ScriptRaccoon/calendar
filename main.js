@@ -191,7 +191,7 @@ function showEvent(ev) {
                 (endHour * slotHeight + (endMinutes / 60) * slotHeight) +
                 "px"
         )
-        .addClass(`color-${ev.color}`)
+        .css("backgroundColor", `var(--color-${ev.color})`)
         .appendTo(`.slots[data-dayIndex=${ev.dayIndex}]`);
 }
 
