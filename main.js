@@ -103,6 +103,19 @@ function closeModal() {
 
 $("#cancelButton").click(closeModal);
 
+$("#addButton").click(() => {
+    if (mode != "view") return;
+    mode = "create";
+    const now = new Date();
+    currentEvent = {
+        start: "12:00",
+        end: "13:00",
+        date: dateString(now),
+        dayIndex: now.getDay(),
+    };
+    openModal();
+});
+
 // event functions
 
 function loadEvents() {
@@ -143,7 +156,7 @@ $("#eventModal").submit((e) => {
 });
 
 function createEvent() {
-    currentEvent.id = Object.values(events).length;
+    currentEvent.id = mex(Object.keys(events));
     events[currentEvent.id] = currentEvent;
     saveEvents();
     showEvent(currentEvent);
@@ -252,4 +265,13 @@ function dateString(date) {
     return `${date.getFullYear()}-${(date.getMonth() + 1)
         .toString()
         .padStart(2, "0")}-${date.getDate().toString().padStart(2, "0")}`;
+}
+
+function mex(list) {
+    let a = 0;
+    const numberList = list.map((str) => parseInt(str));
+    while (numberList.includes(a)) {
+        a++;
+    }
+    return a;
 }
