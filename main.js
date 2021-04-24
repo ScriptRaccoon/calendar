@@ -10,10 +10,12 @@ let weekStart, weekEnd;
 
 // event functions
 
-let events = [];
-
-function getEventById(id) {
-    return events.find((ev) => ev.id == id);
+let events = JSON.parse(localStorage.getItem("events"));
+if (events) {
+    console.log("stored events:", events);
+    // todo: show them!
+} else {
+    events = { number: 0 };
 }
 
 // setup calendar
@@ -137,8 +139,10 @@ $("#eventModal").submit((e) => {
 });
 
 function createEvent() {
-    currentEvent.id = events.length + 1;
-    events.push(currentEvent);
+    currentEvent.id = events.number;
+    events[currentEvent.id] = currentEvent;
+    events.number++;
+    localStorage.setItem("events", JSON.stringify(events));
     const startHour = parseInt(currentEvent.start.substring(0, 2));
     const startMinutes = parseInt(currentEvent.start.substring(3, 5));
     const endHour = parseInt(currentEvent.end.substring(0, 2));
@@ -161,7 +165,7 @@ function createEvent() {
 
 function clickEvent() {
     const id = $(this).attr("id");
-    const event = getEventById(id);
+    const event = events[id];
     if (!event) return;
     currentEvent = event;
     mode = "edit";
@@ -184,10 +188,14 @@ function updateEvent() {
         )
         .addClass(`color-${currentEvent.color}`)
         .appendTo(`.slots[data-dayIndex=${currentEvent.dayIndex}]`);
+    events[currentEvent.id] = currentEvent;
+    localStorage.setItem("events", JSON.stringify(events));
 }
 
 $("#deleteButton").click(() => {
-    events = events.filter((ev) => ev.id != currentEvent.id);
+    delete events[currentEvent.id];
+    events.number--;
+    localStorage.setItem("events", JSON.stringify(events));
     $(`#${currentEvent.id}`).remove();
     closeModal();
 });
