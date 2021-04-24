@@ -104,6 +104,10 @@ body {
     padding: 10px 0px;
 }
 
+.columnHeader.currentDay {
+    background: var(--slot-hover-color);
+}
+
 /* slots */
 
 .slots {

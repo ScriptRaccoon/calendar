@@ -4,6 +4,7 @@ let mode = "view";
 let currentEvent = null;
 let events;
 let firstLoad = true;
+let weekOffset = 0;
 
 const slotHeight = 30;
 
@@ -41,6 +42,7 @@ function setupCalendar() {
     });
     getCurrentWeek();
     loadEvents();
+    showCurrentDay();
 }
 
 // slot functions
@@ -267,6 +269,7 @@ $("#prevWeekBtn").click(() => {
 
 function changeWeek(number) {
     const offset = number * 1000 * 60 * 60 * 24 * 7;
+    weekOffset += number;
     weekStart = new Date(weekStart.getTime() + offset);
     weekEnd = new Date(weekEnd.getTime() + offset);
     showWeek();
@@ -284,6 +287,21 @@ function getCurrentWeek() {
 function showWeek() {
     $("#weekStartDisplay").text(weekStart.toLocaleDateString(undefined, dateOptions));
     $("#weekEndDisplay").text(weekEnd.toLocaleDateString(undefined, dateOptions));
+    if (weekOffset == 0) {
+        showCurrentDay();
+    } else {
+        hideCurrentDay();
+    }
+}
+
+function showCurrentDay() {
+    const now = new Date();
+    const dayIndex = getDayIndex(now);
+    $(`.day[data-dayIndex=${dayIndex}]`).children(".columnHeader").addClass("currentDay");
+}
+
+function hideCurrentDay() {
+    $(".columnHeader").removeClass("currentDay");
 }
 
 // auxiliary stuff
