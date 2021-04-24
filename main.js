@@ -17,11 +17,11 @@ $(() => {
 });
 
 function setupCalendar() {
-    $("#calendar > *").each(function (index) {
+    $("#calendar > *").each(function () {
         const name = $(this).attr("data-name");
+        const dayIndex = parseInt($(this).attr("data-dayIndex"));
         const isDay = $(this).hasClass("day");
         const header = $("<div></div>").addClass("columnHeader").text(name);
-        const dayIndex = index < 7 ? index : 0;
         const slots = $("<div></div>").addClass("slots");
         if (isDay) {
             slots.attr("data-dayIndex", dayIndex);
@@ -61,9 +61,8 @@ function clickSlot() {
     const start = hour.padStart(2, "0") + ":00";
     const end = ((parseInt(hour) + 1) % 24).toString().padStart(2, "0") + ":00";
     let dayIndex = parseInt(slot.attr("data-dayIndex"));
-    if (dayIndex == 0) dayIndex = 7;
     const date = dateString(
-        new Date(weekStart.getTime() + (dayIndex - 1) * 24 * 60 * 60 * 1000)
+        new Date(weekStart.getTime() + dayIndex * 24 * 60 * 60 * 1000)
     );
     currentEvent = { start, end, date, dayIndex };
     mode = "create";
@@ -115,7 +114,7 @@ $("#addButton").click(() => {
         start: "12:00",
         end: "13:00",
         date: dateString(now),
-        dayIndex: now.getDay(),
+        dayIndex: getDayIndex(now),
     };
     openModal();
 });
@@ -157,7 +156,7 @@ $("#eventModal").submit((e) => {
     }
     currentEvent.prevDate = currentEvent.date;
     currentEvent.date = $("#eventDate").val();
-    currentEvent.dayIndex = new Date(currentEvent.date).getDay();
+    currentEvent.dayIndex = getDayIndex(new Date(currentEvent.date));
     currentEvent.description = $("#eventDescription").val();
     currentEvent.color = $(".color.active").attr("data-color");
     if (mode == "create") {
@@ -192,7 +191,7 @@ function updateEvent() {
     showEvent(currentEvent);
     if (currentEvent.date != currentEvent.prevDate) {
         delete events[currentEvent.prevDate][currentEvent.id];
-        if (Object.keys(events[currentEvent.prevDate]).length == 0) {
+        if (Object.values(events[currentEvent.prevDate]).length == 0) {
             delete events[currentEvent.prevDate];
         }
         if (!events[currentEvent.date]) {
@@ -293,6 +292,11 @@ function dateString(date) {
     return `${date.getFullYear()}-${(date.getMonth() + 1)
         .toString()
         .padStart(2, "0")}-${date.getDate().toString().padStart(2, "0")}`;
+}
+
+function getDayIndex(date) {
+    const falseIndex = date.getDay();
+    return falseIndex == 0 ? 6 : falseIndex - 1;
 }
 
 function generateId(length) {
