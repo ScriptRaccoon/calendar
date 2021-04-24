@@ -60,7 +60,8 @@ function clickSlot() {
     const hour = slot.attr("data-hour");
     const start = hour.padStart(2, "0") + ":00";
     const end = ((parseInt(hour) + 1) % 24).toString().padStart(2, "0") + ":00";
-    const dayIndex = slot.attr("data-dayIndex");
+    let dayIndex = parseInt(slot.attr("data-dayIndex"));
+    if (dayIndex == 0) dayIndex = 7;
     const date = dateString(
         new Date(weekStart.getTime() + (dayIndex - 1) * 24 * 60 * 60 * 1000)
     );
