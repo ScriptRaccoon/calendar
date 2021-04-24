@@ -37,9 +37,9 @@ function setupCalendar() {
             }
         }
         $(this).append(header).append(slots);
-        getCurrentWeek();
-        loadEvents();
     });
+    getCurrentWeek();
+    loadEvents();
 }
 
 // slot functions
@@ -106,15 +106,14 @@ $("#cancelButton").click(closeModal);
 // event functions
 
 function loadEvents() {
+    $(".event").remove();
     events = JSON.parse(localStorage.getItem("events"));
     if (events) {
-        for (const key of Object.keys(events)) {
-            if (key != "number") {
-                showEvent(events[key]);
-            }
+        for (const event of Object.values(events)) {
+            showEvent(event);
         }
     } else {
-        events = { number: 0 };
+        events = {};
     }
 }
 
@@ -144,9 +143,8 @@ $("#eventModal").submit((e) => {
 });
 
 function createEvent() {
-    currentEvent.id = events.number;
+    currentEvent.id = Object.values(events).length;
     events[currentEvent.id] = currentEvent;
-    events.number++;
     saveEvents();
     showEvent(currentEvent);
 }
@@ -167,6 +165,10 @@ function updateEvent() {
 }
 
 function showEvent(ev) {
+    if (ev.date < dateString(weekStart) || ev.date > dateString(weekEnd)) {
+        $(`#${ev.id}`).remove();
+        return;
+    }
     const startHour = parseInt(ev.start.substring(0, 2));
     const startMinutes = parseInt(ev.start.substring(3, 5));
     const endHour = parseInt(ev.end.substring(0, 2));
@@ -199,7 +201,6 @@ function saveEvents() {
 
 $("#deleteButton").click(() => {
     delete events[currentEvent.id];
-    events.number--;
     saveEvents();
     $(`#${currentEvent.id}`).remove();
     closeModal();
@@ -228,6 +229,7 @@ function changeWeek(number) {
     weekStart = new Date(weekStart.getTime() + offset);
     weekEnd = new Date(weekEnd.getTime() + offset);
     showWeek();
+    loadEvents();
 }
 
 function getCurrentWeek() {
