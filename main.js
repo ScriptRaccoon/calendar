@@ -126,7 +126,7 @@ $("#eventModal").submit((e) => {
     currentEvent.color = $(".color.active").attr("data-color");
     if (mode == "create") {
         createEvent();
-    } else {
+    } else if (mode == "edit") {
         updateEvent();
     }
     closeModal();
@@ -165,7 +165,21 @@ function clickEvent() {
 }
 
 function updateEvent() {
-    // todo: change slots in #calendar
+    const startHour = parseInt(currentEvent.start.substring(0, 2));
+    const startMinutes = parseInt(currentEvent.start.substring(3, 5));
+    const endHour = parseInt(currentEvent.end.substring(0, 2));
+    const endMinutes = parseInt(currentEvent.end.substring(3, 5));
+    const eventSlot = $(`#${currentEvent.id}`)
+        .text(currentEvent.title)
+        .css("top", startHour * slotHeight + (startMinutes / 60) * slotHeight + "px")
+        .css(
+            "bottom",
+            24 * slotHeight -
+                (endHour * slotHeight + (endMinutes / 60) * slotHeight) +
+                "px"
+        )
+        .addClass(`color-${currentEvent.color}`)
+        .appendTo(`.slots[data-dayIndex=${currentEvent.dayIndex}]`);
 }
 
 $("#deleteButton").click(() => {
