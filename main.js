@@ -289,6 +289,14 @@ function getCurrentWeek() {
 function showWeek() {
     $("#weekStartDisplay").text(weekStart.toLocaleDateString(undefined, dateOptions));
     $("#weekEndDisplay").text(weekEnd.toLocaleDateString(undefined, dateOptions));
+
+    for (let i = 0; i < 7; i++) {
+        const date = new Date(weekStart.getTime() + i * 24 * 60 * 60 * 1000);
+        const day = date.getDate().toString().padStart(2, "0");
+        const month = (date.getMonth() + 1).toString().padStart(2, "0");
+        $(`.day[data-dayIndex=${i}]`).find(`.dayDisplay`).text(`${day}.${month}`);
+    }
+
     if (weekOffset == 0) {
         showCurrentDay();
     } else {
