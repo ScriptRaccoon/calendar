@@ -34,6 +34,11 @@ body {
     justify-content: center;
 }
 
+#header h1 {
+    color: var(--color-blue);
+    font-weight: 400;
+}
+
 #header i {
     cursor: pointer;
     margin: 0px 5px;
@@ -46,7 +51,7 @@ body {
     border-color: black;
 }
 
-#weekDisplay {
+#weekControls {
     position: absolute;
     left: 20px;
     font-size: 22px;
@@ -83,7 +88,7 @@ body {
 
 .day {
     width: 100%;
-    min-width: 170px;
+    min-width: 110px;
 }
 
 .daytime {
@@ -103,6 +108,7 @@ body {
     font-size: 20px;
     padding: 10px 0px;
     height: 60px;
+    overflow: hidden;
 }
 
 .columnHeader.currentDay {
@@ -273,4 +279,10 @@ textarea {
 
 .color-orange {
     background-color: var(--color-orange);
+}
+
+@media (max-width: 800px) {
+    #weekDisplay {
+        display: none;
+    }
 }
