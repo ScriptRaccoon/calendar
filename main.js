@@ -184,11 +184,12 @@ function showEvent(ev) {
     }
     eventSlot
         .text(ev.title)
-        .css("top", startHour * slotHeight + (startMinutes / 60) * slotHeight + "px")
+        .css("top", startHour * slotHeight + (startMinutes / 60) * slotHeight + 2 + "px")
         .css(
             "bottom",
             24 * slotHeight -
                 (endHour * slotHeight + (endMinutes / 60) * slotHeight) +
+                1 +
                 "px"
         )
         .css("backgroundColor", `var(--color-${ev.color})`)

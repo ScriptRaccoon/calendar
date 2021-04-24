@@ -1,7 +1,7 @@
 /* general stuff */
 
 :root {
-    --grid-color: #aaa;
+    --grid-color: #cecece;
     --time-color: #777;
     --slot-hover-color: #eee;
     --shadow-color: rgba(0, 0, 0, 0.3);
@@ -29,20 +29,25 @@ body {
     text-align: center;
     padding: 20px 10px;
     position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 #header i {
     cursor: pointer;
     margin: 0px 5px;
+    color: var(--time-color);
 }
 
 #header i:hover {
-    opacity: 0.5;
+    color: black;
 }
 
 #weekDisplay {
     position: absolute;
     left: 20px;
+    font-size: 22px;
 }
 
 /* calendar */
@@ -113,7 +118,9 @@ body {
 
 .event {
     position: absolute;
-    width: 100%;
+    left: 1px;
+    width: calc(100% - 2px);
+    border-radius: 4px;
     padding: 5px;
     color: white;
     overflow: auto;
@@ -179,7 +186,7 @@ textarea {
     border: 1px solid #222;
 }
 
-#controls {
+#eventControls {
     margin: 25px 0px 10px 0px;
 }
 
