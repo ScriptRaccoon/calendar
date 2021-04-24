@@ -58,21 +58,15 @@ function hoverOutSlot() {
 function clickSlot() {
     if (mode != "view") return;
     const slot = $(this);
-    mode = slot.hasClass("booked") ? "edit" : "create";
-    if (mode == "create") {
-        const hour = slot.attr("data-hour");
-        const start = hour.padStart(2, "0") + ":00";
-        const end = ((parseInt(hour) + 1) % 24).toString().padStart(2, "0") + ":00";
-        const dayIndex = slot.attr("data-dayIndex");
-        const date = dateString(
-            new Date(weekStart.getTime() + (dayIndex - 1) * 24 * 60 * 60 * 1000)
-        );
-        currentEvent = { start, end, date, dayIndex };
-    }
-    if (mode == "edit") {
-        const id = slot.attr("event-id");
-        currentEvent = getEventById(id);
-    }
+    const hour = slot.attr("data-hour");
+    const start = hour.padStart(2, "0") + ":00";
+    const end = ((parseInt(hour) + 1) % 24).toString().padStart(2, "0") + ":00";
+    const dayIndex = slot.attr("data-dayIndex");
+    const date = dateString(
+        new Date(weekStart.getTime() + (dayIndex - 1) * 24 * 60 * 60 * 1000)
+    );
+    currentEvent = { start, end, date, dayIndex };
+    mode = "create";
     openModal();
 }
 
@@ -141,14 +135,13 @@ $("#eventModal").submit((e) => {
 function createEvent() {
     currentEvent.id = events.length + 1;
     events.push(currentEvent);
-    console.log(currentEvent);
     const startHour = parseInt(currentEvent.start.substring(0, 2));
     const startMinutes = parseInt(currentEvent.start.substring(3, 5));
     const endHour = parseInt(currentEvent.end.substring(0, 2));
     const endMinutes = parseInt(currentEvent.end.substring(3, 5));
-    console.log({ startHour, startMinutes, endHour, endMinutes });
-    const eventSlot = $("<div></div>")
+    $("<div></div>")
         .addClass("event")
+        .attr("id", currentEvent.id)
         .appendTo(`.slots[data-dayIndex=${currentEvent.dayIndex}]`)
         .css("top", startHour * slotHeight + (startMinutes / 60) * slotHeight + "px")
         .css(
@@ -158,7 +151,17 @@ function createEvent() {
                 "px"
         )
         .text(currentEvent.title)
-        .addClass(`color-${currentEvent.color}`);
+        .addClass(`color-${currentEvent.color}`)
+        .click(clickEvent);
+}
+
+function clickEvent() {
+    const id = $(this).attr("id");
+    const event = getEventById(id);
+    if (!event) return;
+    currentEvent = event;
+    mode = "edit";
+    openModal();
 }
 
 function updateEvent() {
@@ -167,7 +170,7 @@ function updateEvent() {
 
 $("#deleteButton").click(() => {
     events = events.filter((ev) => ev.id != currentEvent.id);
-    // todo: remove the slots from #calendar
+    $(`#${currentEvent.id}`).remove();
     closeModal();
 });
 
