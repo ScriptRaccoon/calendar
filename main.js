@@ -71,17 +71,19 @@ function clickSlot() {
 // modal functions
 
 function openModal() {
-    const modalTitle = mode == "edit" ? "Edit your event" : "Create a new event";
+    const modalTitle = mode == "edit" ? "Update your event" : "Create a new event";
     $("#modalTitle").text(modalTitle);
     $("#eventDate").val(currentEvent.date);
     $("#eventStart").val(currentEvent.start);
     $("#eventEnd").val(currentEvent.end);
     if (mode == "edit") {
+        $("#submitButton").val("Update");
         $("#deleteButton").show();
         $("#eventTitle").val(currentEvent.title);
         $("#eventDescription").val(currentEvent.description);
         $(`.color[data-color=${currentEvent.color}]`).addClass("active");
     } else if (mode == "create") {
+        $("#submitButton").val("Create");
         $("#deleteButton").hide();
         $(".color").removeClass("active");
         $(".color[data-color=red]").addClass("active");
