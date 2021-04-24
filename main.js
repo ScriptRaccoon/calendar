@@ -1,8 +1,12 @@
+// global variables
+
 let mode = "view";
 let currentEvent = null;
 
 const dateOptions = { month: "2-digit", day: "2-digit", year: "numeric" };
 let weekStart, weekEnd;
+
+// event functions
 
 let events = [];
 
@@ -10,10 +14,10 @@ function getEventById(id) {
     return events.find((ev) => ev.id == id);
 }
 
+// setup calendar
+
 $(() => {
     setupCalendar();
-    $(".slot").click(handleClick);
-    $(".slot").hover(handleHover);
 });
 
 function setupCalendar() {
@@ -25,11 +29,12 @@ function setupCalendar() {
         for (let hour = 0; hour < 24; hour++) {
             const slot = $("<div></div>").attr("data-hour", hour).appendTo(slots);
             if (isDay) {
-                slot.addClass("slot").attr("data-dayIndex", index - 1);
+                slot.addClass("slot")
+                    .attr("data-dayIndex", index - 1)
+                    .click(clickSlot)
+                    .hover(hoverOverSlot, hoverOutSlot);
             } else {
-                slot.addClass("time").text(
-                    hour + ":00 - " + (parseInt(hour) + 1) + ":00"
-                );
+                slot.addClass("time").text(`${hour}:00 - ${hour + 1}:00`);
             }
         }
         $(this).append(header).append(slots);
@@ -37,13 +42,18 @@ function setupCalendar() {
     });
 }
 
-function handleHover() {
+// slot functions
+
+function hoverOverSlot() {
     const hour = $(this).attr("data-hour");
-    $(".time").removeClass("currentTime");
     $(`.time[data-hour=${hour}]`).addClass("currentTime");
 }
 
-function handleClick() {
+function hoverOutSlot() {
+    $(".time").removeClass("currentTime");
+}
+
+function clickSlot() {
     if (mode != "view") return;
     const slot = $(this);
     mode = slot.hasClass("booked") ? "edit" : "create";
@@ -58,12 +68,11 @@ function handleClick() {
     if (mode == "edit") {
         const id = slot.attr("event-id");
         currentEvent = getEventById(id);
-        // currentEvent.title = slot.attr("data-title");
-        // currentEvent.description = slot.attr("data-description");
-        // currentEvent.color = slot.attr("data-color");
     }
     openModal();
 }
+
+// modal functions
 
 function openModal() {
     const modalTitle = mode == "edit" ? "Edit your event" : "Create a new event";
@@ -91,24 +100,14 @@ function openModal() {
 function closeModal() {
     $("#eventModal").hide();
     $("#errors").text("");
-    mode = "view";
     $("#calendar").removeClass("opaque");
+    mode = "view";
+    currentEvent = null;
 }
 
 $("#cancelButton").click(closeModal);
 
-$("#deleteButton").click(() => {
-    events = events.filter((ev) => ev.id != currentEvent.id);
-
-    // currentEvent.slot
-    //     .removeClass("booked")
-    //     .text("")
-    //     .removeAttr("data-color")
-    //     .removeAttr("data-title")
-    //     .removeAttr("data-description")
-    //     .css("backgroundColor", "transparent");
-    closeModal();
-});
+// event functions
 
 $("#eventModal").submit((e) => {
     e.preventDefault();
@@ -121,38 +120,41 @@ $("#eventModal").submit((e) => {
     currentEvent.start = $("#eventStart").val();
     currentEvent.end = $("#eventEnd").val();
     currentEvent.description = $("#eventDescription").val();
-    currentEvent.color = $(`.color.active`).attr("data-color");
-    $("#eventTitle").val("");
-    $("#eventDescription").val("");
-    createEvent();
+    currentEvent.color = $(".color.active").attr("data-color");
+    if (mode == "create") {
+        createEvent();
+    } else {
+        updateEvent();
+    }
     closeModal();
 });
 
 function createEvent() {
-    if (mode == "create") {
-        currentEvent.id = events.length + 1;
-        events.push(currentEvent);
-        console.log(events);
-    }
-
-    // currentEvent.slot
-    //     .addClass("booked")
-    //     .text(currentEvent.title)
-    //     .attr("data-title", currentEvent.title)
-    //     .attr("")
-    //     .attr("data-description", currentEvent.description)
-    //     .attr("data-color", currentEvent.color)
-    //     .css(
-    //         "backgroundColor",
-    //         $(`.color[data-color=${currentEvent.color}]`).css("backgroundColor")
-    //     );
+    currentEvent.id = events.length + 1;
+    events.push(currentEvent);
+    console.log({ currentEvent });
+    // todo: add slots in #calendar
 }
+
+function updateEvent() {
+    // todo: change slots in #calendar
+}
+
+$("#deleteButton").click(() => {
+    events = events.filter((ev) => ev.id != currentEvent.id);
+    // todo: remove the slots from #calendar
+    closeModal();
+});
+
+// change color
 
 $(".color").click(function () {
     $(".color.active").removeClass("active");
     $(this).addClass("active");
     currentEvent.color = $(this).attr("data-color");
 });
+
+// week functions
 
 $("#nextWeekBtn").click(() => {
     changeWeek(1);
@@ -181,6 +183,8 @@ function showWeek() {
     $("#weekStartDisplay").text(weekStart.toLocaleDateString(undefined, dateOptions));
     $("#weekEndDisplay").text(weekEnd.toLocaleDateString(undefined, dateOptions));
 }
+
+// auxiliary stuff
 
 function dateString(date) {
     return `${date.getFullYear()}-${(date.getMonth() + 1)
