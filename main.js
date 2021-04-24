@@ -2,21 +2,12 @@
 
 let mode = "view";
 let currentEvent = null;
+let events;
 
 const slotHeight = 30;
 
 const dateOptions = { month: "2-digit", day: "2-digit", year: "numeric" };
 let weekStart, weekEnd;
-
-// event functions
-
-let events = JSON.parse(localStorage.getItem("events"));
-if (events) {
-    console.log("stored events:", events);
-    // todo: show them!
-} else {
-    events = { number: 0 };
-}
 
 // setup calendar
 
@@ -47,6 +38,7 @@ function setupCalendar() {
         }
         $(this).append(header).append(slots);
         getCurrentWeek();
+        loadEvents();
     });
 }
 
@@ -113,6 +105,19 @@ $("#cancelButton").click(closeModal);
 
 // event functions
 
+function loadEvents() {
+    events = JSON.parse(localStorage.getItem("events"));
+    if (events) {
+        for (const key of Object.keys(events)) {
+            if (key != "number") {
+                showEvent(events[key]);
+            }
+        }
+    } else {
+        events = { number: 0 };
+    }
+}
+
 $("#eventModal").submit((e) => {
     e.preventDefault();
     currentEvent.title = $("#eventTitle").val();
@@ -142,25 +147,8 @@ function createEvent() {
     currentEvent.id = events.number;
     events[currentEvent.id] = currentEvent;
     events.number++;
-    localStorage.setItem("events", JSON.stringify(events));
-    const startHour = parseInt(currentEvent.start.substring(0, 2));
-    const startMinutes = parseInt(currentEvent.start.substring(3, 5));
-    const endHour = parseInt(currentEvent.end.substring(0, 2));
-    const endMinutes = parseInt(currentEvent.end.substring(3, 5));
-    $("<div></div>")
-        .addClass("event")
-        .attr("id", currentEvent.id)
-        .appendTo(`.slots[data-dayIndex=${currentEvent.dayIndex}]`)
-        .css("top", startHour * slotHeight + (startMinutes / 60) * slotHeight + "px")
-        .css(
-            "bottom",
-            24 * slotHeight -
-                (endHour * slotHeight + (endMinutes / 60) * slotHeight) +
-                "px"
-        )
-        .text(currentEvent.title)
-        .addClass(`color-${currentEvent.color}`)
-        .click(clickEvent);
+    saveEvents();
+    showEvent(currentEvent);
 }
 
 function clickEvent() {
@@ -173,12 +161,27 @@ function clickEvent() {
 }
 
 function updateEvent() {
-    const startHour = parseInt(currentEvent.start.substring(0, 2));
-    const startMinutes = parseInt(currentEvent.start.substring(3, 5));
-    const endHour = parseInt(currentEvent.end.substring(0, 2));
-    const endMinutes = parseInt(currentEvent.end.substring(3, 5));
-    const eventSlot = $(`#${currentEvent.id}`)
-        .text(currentEvent.title)
+    showEvent(currentEvent);
+    events[currentEvent.id] = currentEvent;
+    saveEvents();
+}
+
+function showEvent(ev) {
+    const startHour = parseInt(ev.start.substring(0, 2));
+    const startMinutes = parseInt(ev.start.substring(3, 5));
+    const endHour = parseInt(ev.end.substring(0, 2));
+    const endMinutes = parseInt(ev.end.substring(3, 5));
+    let eventSlot;
+    if ($(`#${ev.id}`).length) {
+        eventSlot = $(`#${ev.id}`);
+    } else {
+        eventSlot = $("<div></div>")
+            .addClass("event")
+            .attr("id", ev.id)
+            .click(clickEvent);
+    }
+    eventSlot
+        .text(ev.title)
         .css("top", startHour * slotHeight + (startMinutes / 60) * slotHeight + "px")
         .css(
             "bottom",
@@ -186,16 +189,18 @@ function updateEvent() {
                 (endHour * slotHeight + (endMinutes / 60) * slotHeight) +
                 "px"
         )
-        .addClass(`color-${currentEvent.color}`)
-        .appendTo(`.slots[data-dayIndex=${currentEvent.dayIndex}]`);
-    events[currentEvent.id] = currentEvent;
+        .addClass(`color-${ev.color}`)
+        .appendTo(`.slots[data-dayIndex=${ev.dayIndex}]`);
+}
+
+function saveEvents() {
     localStorage.setItem("events", JSON.stringify(events));
 }
 
 $("#deleteButton").click(() => {
     delete events[currentEvent.id];
     events.number--;
-    localStorage.setItem("events", JSON.stringify(events));
+    saveEvents();
     $(`#${currentEvent.id}`).remove();
     closeModal();
 });
