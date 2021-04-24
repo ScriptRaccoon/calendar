@@ -27,12 +27,16 @@ function setupCalendar() {
         const name = this.id;
         const isDay = $(this).hasClass("day");
         const header = $("<div></div>").addClass("columnHeader").text(name);
-        const slots = $("<div></div>").addClass("slots").attr("data-dayIndex", index);
+        const dayIndex = index < 7 ? index : 0;
+        const slots = $("<div></div>").addClass("slots");
+        if (isDay) {
+            slots.attr("data-dayIndex", dayIndex);
+        }
         for (let hour = 0; hour < 24; hour++) {
             const slot = $("<div></div>").attr("data-hour", hour).appendTo(slots);
             if (isDay) {
                 slot.addClass("slot")
-                    .attr("data-dayIndex", index)
+                    .attr("data-dayIndex", dayIndex)
                     .click(clickSlot)
                     .hover(hoverOverSlot, hoverOutSlot);
             } else {
