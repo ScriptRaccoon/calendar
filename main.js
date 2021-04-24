@@ -3,6 +3,8 @@
 let mode = "view";
 let currentEvent = null;
 
+const slotHeight = 30;
+
 const dateOptions = { month: "2-digit", day: "2-digit", year: "numeric" };
 let weekStart, weekEnd;
 
@@ -25,12 +27,12 @@ function setupCalendar() {
         const name = this.id;
         const isDay = $(this).hasClass("day");
         const header = $("<div></div>").addClass("columnHeader").text(name);
-        const slots = $("<div></div>").addClass("slots");
+        const slots = $("<div></div>").addClass("slots").attr("data-dayIndex", index);
         for (let hour = 0; hour < 24; hour++) {
             const slot = $("<div></div>").attr("data-hour", hour).appendTo(slots);
             if (isDay) {
                 slot.addClass("slot")
-                    .attr("data-dayIndex", index - 1)
+                    .attr("data-dayIndex", index)
                     .click(clickSlot)
                     .hover(hoverOverSlot, hoverOutSlot);
             } else {
@@ -62,8 +64,10 @@ function clickSlot() {
         const start = hour.padStart(2, "0") + ":00";
         const end = ((parseInt(hour) + 1) % 24).toString().padStart(2, "0") + ":00";
         const dayIndex = slot.attr("data-dayIndex");
-        const date = new Date(weekStart.getTime() + dayIndex * 24 * 60 * 60 * 1000);
-        currentEvent = { start, end, date };
+        const date = dateString(
+            new Date(weekStart.getTime() + (dayIndex - 1) * 24 * 60 * 60 * 1000)
+        );
+        currentEvent = { start, end, date, dayIndex };
     }
     if (mode == "edit") {
         const id = slot.attr("event-id");
@@ -77,7 +81,7 @@ function clickSlot() {
 function openModal() {
     const modalTitle = mode == "edit" ? "Edit your event" : "Create a new event";
     $("#modalTitle").text(modalTitle);
-    $("#eventDate").val(dateString(currentEvent.date));
+    $("#eventDate").val(currentEvent.date);
     $("#eventStart").val(currentEvent.start);
     $("#eventEnd").val(currentEvent.end);
     if (mode == "edit") {
@@ -116,9 +120,14 @@ $("#eventModal").submit((e) => {
         $("#errors").text("There is no title");
         return;
     }
-    currentEvent.date = $("#eventDate").val();
     currentEvent.start = $("#eventStart").val();
     currentEvent.end = $("#eventEnd").val();
+    if (currentEvent.start > currentEvent.end) {
+        $("#errors").text("The start cannot be after the end");
+        return;
+    }
+    currentEvent.date = $("#eventDate").val();
+    currentEvent.dayIndex = new Date(currentEvent.date).getDay();
     currentEvent.description = $("#eventDescription").val();
     currentEvent.color = $(".color.active").attr("data-color");
     if (mode == "create") {
@@ -132,8 +141,22 @@ $("#eventModal").submit((e) => {
 function createEvent() {
     currentEvent.id = events.length + 1;
     events.push(currentEvent);
-    console.log({ currentEvent });
-    // todo: add slots in #calendar
+    console.log(currentEvent);
+    const startHour = parseInt(currentEvent.start.substring(0, 2));
+    const startMinutes = parseInt(currentEvent.start.substring(3, 5));
+    const endHour = parseInt(currentEvent.end.substring(0, 2));
+    const endMinutes = parseInt(currentEvent.end.substring(3, 5));
+    console.log({ startHour, startMinutes, endHour, endMinutes });
+    const eventSlot = $("<div></div>")
+        .addClass("event")
+        .appendTo(`.slots[data-dayIndex=${currentEvent.dayIndex}]`)
+        .css("top", startHour * slotHeight + (startMinutes / 60) * slotHeight + "px")
+        .css(
+            "bottom",
+            24 * slotHeight -
+                (endHour * slotHeight + (endMinutes / 60) * slotHeight) +
+                "px"
+        );
 }
 
 function updateEvent() {

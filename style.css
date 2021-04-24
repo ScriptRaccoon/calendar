@@ -73,6 +73,10 @@ body {
 
 /* slots */
 
+.slots {
+    position: relative;
+}
+
 .slot,
 .time {
     border-top: 1px solid #555;
@@ -94,13 +98,12 @@ body {
     background-color: #eee;
 }
 
-.slot.booked {
-    color: white;
-    padding: 0px 5px;
-}
+/* event slots */
 
-.slot.booked:hover {
-    opacity: 0.7;
+.event {
+    background-color: teal;
+    position: absolute;
+    width: 100%;
 }
 
 /* event modal */
