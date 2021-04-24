@@ -147,19 +147,35 @@ function loadEvents() {
 
 $("#eventModal").submit((e) => {
     e.preventDefault();
-    currentEvent.title = $("#eventTitle").val();
-    if (currentEvent.title == "") {
+    const newTitle = $("#eventTitle").val();
+    if (newTitle.length == 0) {
         $("#errors").text("There is no title");
         return;
     }
-    currentEvent.start = $("#eventStart").val();
-    currentEvent.end = $("#eventEnd").val();
-    if (currentEvent.start > currentEvent.end) {
-        $("#errors").text("The start cannot be after the end");
+    const newStart = $("#eventStart").val();
+    const newEnd = $("#eventEnd").val();
+    const newDate = $("#eventDate").val();
+    if (newStart > newEnd) {
+        $("#errors").text("The start cannot be after the end.");
         return;
     }
+    if (events[newDate]) {
+        const collidingEvent = Object.values(events[newDate]).find(
+            (ev) => ev.id != currentEvent.id && ev.end > newStart && ev.start < newEnd
+        );
+        if (collidingEvent) {
+            $("#errors").html(
+                `This collides with the event '${collidingEvent.title}' 
+                (${collidingEvent.start} - ${collidingEvent.end}).`
+            );
+            return;
+        }
+    }
+    currentEvent.title = newTitle;
+    currentEvent.start = newStart;
+    currentEvent.end = newEnd;
     currentEvent.prevDate = currentEvent.date;
-    currentEvent.date = $("#eventDate").val();
+    currentEvent.date = newDate;
     currentEvent.dayIndex = getDayIndex(new Date(currentEvent.date));
     currentEvent.description = $("#eventDescription").val();
     currentEvent.color = $(".color.active").attr("data-color");
