@@ -1,5 +1,12 @@
 /* general stuff */
 
+:root {
+    --grid-color: #aaa;
+    --time-color: #777;
+    --slot-hover-color: #eee;
+    --shadow-color: rgba(0, 0, 0, 0.3);
+}
+
 * {
     box-sizing: border-box;
     margin: 0;
@@ -58,11 +65,11 @@ body {
     min-width: 100px;
     max-width: 100px;
     text-align: center;
-    color: #555;
+    color: var(--time-color);
 }
 
 .day {
-    border-left: 1px solid #555;
+    border-left: 1px solid var(--grid-color);
 }
 
 .columnHeader {
@@ -79,7 +86,7 @@ body {
 
 .slot,
 .time {
-    border-top: 1px solid #555;
+    border-top: 1px solid var(--grid-color);
     height: 30px;
     line-height: 30px;
 }
@@ -89,21 +96,23 @@ body {
 }
 
 .currentTime {
-    background-color: #eee;
+    background-color: var(--slot-hover-color);
     color: black;
 }
 
 .slot:hover {
     cursor: pointer;
-    background-color: #eee;
+    background-color: var(--slot-hover-color);
 }
 
 /* event slots */
 
 .event {
-    background-color: teal;
     position: absolute;
     width: 100%;
+    padding: 5px;
+    color: white;
+    overflow: auto;
 }
 
 /* event modal */
@@ -112,7 +121,7 @@ body {
     display: none;
     background-color: white;
     border-radius: 10px;
-    box-shadow: 0px 0px 10px #777;
+    box-shadow: 0px 0px 20px var(--shadow-color);
     left: 50%;
     top: 50%;
     transform: translate(-50%, -50%);
@@ -211,18 +220,18 @@ textarea {
     border: 5px solid #ccc;
 }
 
-.color[data-color="red"] {
-    background-color: rgb(163, 25, 25);
+.color-red {
+    background-color: rgb(190, 35, 15);
 }
 
-.color[data-color="blue"] {
-    background-color: rgb(48, 48, 167);
+.color-blue {
+    background-color: rgb(54, 92, 175);
 }
 
-.color[data-color="green"] {
+.color-green {
     background-color: rgb(21, 129, 21);
 }
 
-.color[data-color="orange"] {
+.color-orange {
     background-color: rgb(233, 153, 4);
 }

@@ -156,7 +156,9 @@ function createEvent() {
             24 * slotHeight -
                 (endHour * slotHeight + (endMinutes / 60) * slotHeight) +
                 "px"
-        );
+        )
+        .text(currentEvent.title)
+        .addClass(`color-${currentEvent.color}`);
 }
 
 function updateEvent() {
