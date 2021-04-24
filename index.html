@@ -9,6 +9,7 @@
     <link rel="stylesheet" href="style.css">    
 </head>
 <body>
+
     <header id="header">
         <div id="weekDisplay">
             <i id="prevWeekBtn" class="fas fa-angle-double-left"></i>
@@ -25,24 +26,26 @@
             <i id="addButton" class="fas fa-plus"></i>
         </div>
     </header>
+
     <main id="calendar">
-        <div id="Time" class="daytime">            
+        <div data-name="Time" class="daytime">            
         </div>
-        <div id="Monday" class="day">           
+        <div data-name="Monday" class="day">           
         </div>
-        <div id="Tuesday" class="day">           
+        <div data-name="Tuesday" class="day">           
         </div>
-        <div id="Wednesday" class="day">           
+        <div data-name="Wednesday" class="day">           
         </div>
-        <div id="Thursday" class="day">            
+        <div data-name="Thursday" class="day">            
         </div>
-        <div id="Friday" class="day">           
+        <div data-name="Friday" class="day">           
         </div>
-        <div id="Saturday" class="day">            
+        <div data-name="Saturday" class="day">            
         </div>
-        <div id="Sunday" class="day">           
+        <div data-name="Sunday" class="day">           
         </div>
     </main>
+
     <form id="eventModal">
         <h2 id="modalTitle">
         </h2>
@@ -84,7 +87,9 @@
 
         </div>
     </form>
+
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
     <script src="main.js" type="module"></script>
+
 </body>
 </html>

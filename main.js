@@ -3,6 +3,7 @@
 let mode = "view";
 let currentEvent = null;
 let events;
+let firstLoad = true;
 
 const slotHeight = 30;
 
@@ -17,7 +18,7 @@ $(() => {
 
 function setupCalendar() {
     $("#calendar > *").each(function (index) {
-        const name = this.id;
+        const name = $(this).attr("data-name");
         const isDay = $(this).hasClass("day");
         const header = $("<div></div>").addClass("columnHeader").text(name);
         const dayIndex = index < 7 ? index : 0;
@@ -122,10 +123,18 @@ $("#addButton").click(() => {
 
 function loadEvents() {
     $(".event").remove();
-    events = JSON.parse(localStorage.getItem("events"));
+    if (firstLoad) events = JSON.parse(localStorage.getItem("events"));
+    firstLoad = false;
     if (events) {
-        for (const event of Object.values(events)) {
-            showEvent(event);
+        for (let i = 0; i < 7; i++) {
+            const date = dateString(
+                new Date(weekStart.getTime() + i * 24 * 60 * 60 * 1000)
+            );
+            if (events[date]) {
+                for (const event of Object.values(events[date])) {
+                    showEvent(event);
+                }
+            }
         }
     } else {
         events = {};
@@ -145,6 +154,7 @@ $("#eventModal").submit((e) => {
         $("#errors").text("The start cannot be after the end");
         return;
     }
+    currentEvent.prevDate = currentEvent.date;
     currentEvent.date = $("#eventDate").val();
     currentEvent.dayIndex = new Date(currentEvent.date).getDay();
     currentEvent.description = $("#eventDescription").val();
@@ -158,15 +168,19 @@ $("#eventModal").submit((e) => {
 });
 
 function createEvent() {
-    currentEvent.id = mex(Object.keys(events));
-    events[currentEvent.id] = currentEvent;
+    currentEvent.id = generateId(20);
+    if (!events[currentEvent.date]) {
+        events[currentEvent.date] = {};
+    }
+    events[currentEvent.date][currentEvent.id] = currentEvent;
     saveEvents();
     showEvent(currentEvent);
 }
 
 function clickEvent() {
     const id = $(this).attr("id");
-    const event = events[id];
+    const date = $(this).attr("data-date");
+    const event = events[date][id];
     if (!event) return;
     currentEvent = event;
     mode = "edit";
@@ -175,7 +189,16 @@ function clickEvent() {
 
 function updateEvent() {
     showEvent(currentEvent);
-    events[currentEvent.id] = currentEvent;
+    if (currentEvent.date != currentEvent.prevDate) {
+        delete events[currentEvent.prevDate][currentEvent.id];
+        if (Object.keys(events[currentEvent.prevDate]).length == 0) {
+            delete events[currentEvent.prevDate];
+        }
+        if (!events[currentEvent.date]) {
+            events[currentEvent.date] = {};
+        }
+        events[currentEvent.date][currentEvent.id] = currentEvent;
+    }
     saveEvents();
 }
 
@@ -195,6 +218,7 @@ function showEvent(ev) {
         eventSlot = $("<div></div>")
             .addClass("event")
             .attr("id", ev.id)
+            .attr("data-date", ev.date)
             .click(clickEvent);
     }
     eventSlot
@@ -207,6 +231,7 @@ function showEvent(ev) {
                 1 +
                 "px"
         )
+        .attr("data-date", ev.date)
         .css("backgroundColor", `var(--color-${ev.color})`)
         .appendTo(`.slots[data-dayIndex=${ev.dayIndex}]`);
 }
@@ -216,7 +241,7 @@ function saveEvents() {
 }
 
 $("#deleteButton").click(() => {
-    delete events[currentEvent.id];
+    delete events[currentEvent.date][currentEvent.id];
     saveEvents();
     $(`#${currentEvent.id}`).remove();
     closeModal();
@@ -269,11 +294,12 @@ function dateString(date) {
         .padStart(2, "0")}-${date.getDate().toString().padStart(2, "0")}`;
 }
 
-function mex(list) {
-    let a = 0;
-    const numberList = list.map((str) => parseInt(str));
-    while (numberList.includes(a)) {
-        a++;
+function generateId(length) {
+    const chars = "ABCDEFGHIHJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+    let id = "";
+    for (let i = 0; i < length; i++) {
+        const rand = Math.floor(Math.random() * chars.length);
+        id += chars.charAt(rand);
     }
-    return a;
+    return id;
 }
