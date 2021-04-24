@@ -19,13 +19,15 @@ $(() => {
 
 function setupCalendar() {
     $("#calendar > *").each(function () {
-        const name = $(this).attr("data-name");
         const dayIndex = parseInt($(this).attr("data-dayIndex"));
         const isDay = $(this).hasClass("day");
-        const header = $("<div></div>").addClass("columnHeader").text(name);
+        const header = $("<div></div>").addClass("columnHeader");
         const slots = $("<div></div>").addClass("slots");
         if (isDay) {
+            const name = $(this).attr("data-name");
+            header.text(name);
             slots.attr("data-dayIndex", dayIndex);
+            $("<div></div>").addClass("dayDisplay").appendTo(header).text("01.01.");
         }
         for (let hour = 0; hour < 24; hour++) {
             const slot = $("<div></div>").attr("data-hour", hour).appendTo(slots);

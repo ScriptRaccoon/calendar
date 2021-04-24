@@ -102,10 +102,16 @@ body {
     text-align: center;
     font-size: 20px;
     padding: 10px 0px;
+    height: 60px;
 }
 
 .columnHeader.currentDay {
     background: var(--slot-hover-color);
+}
+
+.dayDisplay {
+    font-size: 15px;
+    color: var(--time-color);
 }
 
 /* slots */
