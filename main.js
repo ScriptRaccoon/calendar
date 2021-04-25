@@ -1,22 +1,7 @@
 import { dateString, generateId, getDayIndex } from "./helper.js";
 
-class Event {
-    constructor(cal) {
-        this.cal = cal;
-        this.title = null;
-        this.date = null;
-        this.start = null;
-        this.end = null;
-        this.prevDate = null;
-        this.dayIndex = null;
-        this.description = null;
-        this.color = null;
-    }
-}
-
 class Calendar {
-    constructor(container) {
-        this.container = container;
+    constructor() {
         this.mode = "view";
         this.currentEvent = null;
         this.events = {};
@@ -33,11 +18,11 @@ class Calendar {
         this.setupDays();
         this.calculateCurrentWeek();
         this.showWeek();
-        // loadEvents();
+        this.setupModal();
+        this.loadEventsFromLocalStorage(true);
     }
 
     setupTimes() {
-        const dayTime = this.container.find(".dayTime");
         const header = $("<div></div>").addClass("columnHeader");
         const slots = $("<div></div>").addClass("slots");
         for (let hour = 0; hour < 24; hour++) {
@@ -47,12 +32,12 @@ class Calendar {
                 .text(`${hour}:00 - ${hour + 1}:00`)
                 .appendTo(slots);
         }
-        dayTime.append(header).append(slots);
+        $(".dayTime").append(header).append(slots);
     }
 
     setupDays() {
         const cal = this;
-        cal.container.find(".day").each(function () {
+        $(".day").each(function () {
             const dayIndex = parseInt($(this).attr("data-dayIndex"));
             const name = $(this).attr("data-name");
             const header = $("<div></div>").addClass("columnHeader").text(name);
@@ -84,12 +69,12 @@ class Calendar {
     }
 
     showWeek() {
-        this.container
-            .find("#weekStartDisplay")
-            .text(this.weekStart.toLocaleDateString(undefined, this.dateOptions));
-        this.container
-            .find("#weekEndDisplay")
-            .text(this.weekEnd.toLocaleDateString(undefined, this.dateOptions));
+        $("#weekStartDisplay").text(
+            this.weekStart.toLocaleDateString(undefined, this.dateOptions)
+        );
+        $("#weekEndDisplay").text(
+            this.weekEnd.toLocaleDateString(undefined, this.dateOptions)
+        );
 
         for (let dayIndex = 0; dayIndex < 7; dayIndex++) {
             const date = new Date(
@@ -97,9 +82,7 @@ class Calendar {
             );
             const day = date.getDate().toString().padStart(2, "0");
             const month = (date.getMonth() + 1).toString().padStart(2, "0");
-            this.container
-                .find(`.day[data-dayIndex=${dayIndex}] .dayDisplay`)
-                .text(`${day}.${month}`);
+            $(`.day[data-dayIndex=${dayIndex}] .dayDisplay`).text(`${day}.${month}`);
         }
         if (this.weekOffset == 0) {
             this.showCurrentDay();
@@ -111,19 +94,19 @@ class Calendar {
     showCurrentDay() {
         const now = new Date();
         const dayIndex = getDayIndex(now);
-        this.container.find(`.day[data-dayIndex=${dayIndex}]`).addClass("currentDay");
+        $(`.day[data-dayIndex=${dayIndex}]`).addClass("currentDay");
     }
 
     hideCurrentDay() {
-        this.container.find(".day").removeClass("currentDay");
+        $(".day").removeClass("currentDay");
     }
 
     hoverOver(hour) {
-        this.container.find(`.time[data-hour=${hour}]`).addClass("currentTime");
+        $(`.time[data-hour=${hour}]`).addClass("currentTime");
     }
 
     hoverOut() {
-        this.container.find(".time").removeClass("currentTime");
+        $(".time").removeClass("currentTime");
     }
 
     clickSlot(hour, dayIndex) {
@@ -134,66 +117,127 @@ class Calendar {
         const date = dateString(
             new Date(this.weekStart.getTime() + dayIndex * 24 * 60 * 60 * 1000)
         );
-        const id = generateId();
-        this.openModal({ start, end, date, dayIndex, id });
+        this.openModal({
+            start,
+            end,
+            date,
+            title: "",
+            description: "",
+            color: "red",
+        });
     }
 
-    openModal(data) {
+    setupModal() {
+        $("#cancelButton").click(() => this.closeModal());
+        $("#eventModal").submit((e) => this.submitModal(e));
+        $("#deleteButton").click(() => this.deleteEvent());
+    }
+
+    closeModal() {
+        $("#eventModal").hide();
+        $("#errors").text("");
+        $("#calendar").removeClass("opaque");
+        this.mode = "view";
+    }
+
+    openModal(eventData) {
+        const { start, end, date, title, description, color } = eventData;
+        $("#modalTitle").text(
+            this.mode == "edit" ? "Update your event" : "Create a new event"
+        );
+        $("#eventDate").val(date);
+        $("#eventStart").val(start);
+        $("#eventEnd").val(end);
+        $("#eventTitle").val(title);
+        $("#eventDescription").val(description);
+        $(".color").removeClass("active");
+        $(`.color[data-color=${color}]`).addClass("active");
+        if (this.mode == "edit") {
+            $("#submitButton").val("Update");
+            $("#deleteButton, #copyButton").show();
+        } else if (this.mode == "create" || this.mode == "copy") {
+            $("#submitButton").val("Create");
+            $("#deleteButton, #copyButton").hide();
+        }
+        $("#eventModal").fadeIn("fast");
+        $("#eventTitle").focus();
+        $("#calendar").addClass("opaque");
+    }
+
+    submitModal(e) {
+        e.preventDefault();
+        // todo: validation
+        if (this.mode == "create" || this.mode == "copy") {
+            this.createEvent();
+        } else {
+            this.updateEvent();
+        }
+    }
+
+    createEvent() {
+        const event = {
+            id: generateId(),
+            title: $("#eventTitle").val(),
+            start: $("#eventStart").val(),
+            end: $("#eventEnd").val(),
+            date: $("#eventDate").val(),
+            description: $("#eventDescription").val(),
+            color: $(".color.active").attr("data-color"),
+        };
+        if (!this.events[event.date]) {
+            this.events[event.date] = {};
+        }
+        this.events[event.date][event.id] = event;
+        this.saveEventsToLocalStorage();
+        this.showEvent(event);
+    }
+
+    showEvent(event) {
         // todo
-        console.log(data);
+        console.log(event);
+    }
+
+    updateEvent() {
+        // todo
+    }
+
+    deleteEvent() {
+        // todo
+    }
+
+    saveEventsToLocalStorage() {
+        localStorage.setItem("events", JSON.stringify(this.events));
+    }
+
+    loadEventsFromLocalStorage(firstTime = false) {
+        $(".event").remove();
+        if (firstTime) this.events = JSON.parse(localStorage.getItem("events"));
+        if (this.events) {
+            for (let dayIndex = 0; dayIndex < 7; dayIndex++) {
+                const date = dateString(
+                    new Date(weekStart.getTime() + dayIndex * 24 * 60 * 60 * 1000)
+                );
+                if (this.events[date]) {
+                    for (const event of Object.values(this.events[date])) {
+                        this.showEvent(event);
+                    }
+                }
+            }
+        } else {
+            this.events = {};
+        }
     }
 }
 
 // setup calendar
 
 $(() => {
-    new Calendar($("#container")).setup();
+    new Calendar().setup();
 });
 
 // ----------- TO BE REFACTORED -----------
 
 // modal functions
-
-function openModal() {
-    const modalTitle = mode == "edit" ? "Update your event" : "Create a new event";
-    $("#modalTitle").text(modalTitle);
-    $("#eventDate").val(currentEvent.date);
-    $("#eventStart").val(currentEvent.start);
-    $("#eventEnd").val(currentEvent.end);
-    if (mode == "edit") {
-        $("#submitButton").val("Update");
-        $("#deleteButton, #copyButton").show();
-        $("#eventTitle").val(currentEvent.title);
-        $("#eventDescription").val(currentEvent.description);
-        $(`.color[data-color=${currentEvent.color}]`).addClass("active");
-    } else if (mode == "create") {
-        $("#submitButton").val("Create");
-        $("#deleteButton, #copyButton").hide();
-        $(".color").removeClass("active");
-        $(".color[data-color=red]").addClass("active");
-        $("#eventTitle").val("");
-        $("#eventDescription").val("");
-    } else if (mode == "copy") {
-        $("#submitButton").val("Create");
-        $("#deleteButton, #copyButton").hide();
-        $("#eventTitle").val(`Kopie von ${currentEvent.title}`);
-        $("#eventDescription").val(currentEvent.description);
-        $(`.color[data-color=${currentEvent.color}]`).addClass("active");
-    }
-    $("#eventModal").fadeIn("fast");
-    $("#eventTitle").focus();
-    $("#calendar").addClass("opaque");
-}
-
-function closeModal() {
-    $("#eventModal").hide();
-    $("#errors").text("");
-    $("#calendar").removeClass("opaque");
-    mode = "view";
-    currentEvent = null;
-}
-
-$("#cancelButton").click(closeModal);
 
 $("#addButton").click(() => {
     if (mode != "view") return;
@@ -220,80 +264,51 @@ $("#copyButton").click(() => {
 
 // event functions
 
-function loadEvents() {
-    $(".event").remove();
-    if (firstLoad) events = JSON.parse(localStorage.getItem("events"));
-    firstLoad = false;
-    if (events) {
-        for (let i = 0; i < 7; i++) {
-            const date = dateString(
-                new Date(weekStart.getTime() + i * 24 * 60 * 60 * 1000)
-            );
-            if (events[date]) {
-                for (const event of Object.values(events[date])) {
-                    showEvent(event);
-                }
-            }
-        }
-    } else {
-        events = {};
-    }
-}
-
-$("#eventModal").submit((e) => {
-    e.preventDefault();
-    const newTitle = $("#eventTitle").val();
-    const newStart = $("#eventStart").val();
-    const newEnd = $("#eventEnd").val();
-    const newDate = $("#eventDate").val();
-    if (events[newDate]) {
-        const collidingEvent = Object.values(events[newDate]).find(
-            (ev) => ev.id != currentEvent.id && ev.end > newStart && ev.start < newEnd
-        );
-        if (collidingEvent) {
-            $("#errors").text(
-                `This collides with the event '${collidingEvent.title}' 
-                (${collidingEvent.start} - ${collidingEvent.end}).`
-            );
-            return;
-        }
-    }
-    const duration =
-        (new Date(`${newDate}T${newEnd}`).getTime() -
-            new Date(`${newDate}T${newStart}`).getTime()) /
-        (1000 * 60);
-    if (duration < 0) {
-        $("#errors").text("The start cannot be after the end.");
-        return;
-    } else if (duration < 30) {
-        $("#errors").text("Events should be at least 30 minutes.");
-        return;
-    }
-    currentEvent.title = newTitle;
-    currentEvent.start = newStart;
-    currentEvent.end = newEnd;
-    currentEvent.duration = duration;
-    currentEvent.prevDate = currentEvent.date;
-    currentEvent.date = newDate;
-    currentEvent.dayIndex = getDayIndex(new Date(currentEvent.date));
-    currentEvent.description = $("#eventDescription").val();
-    currentEvent.color = $(".color.active").attr("data-color");
-    if (mode == "create" || mode == "copy") {
-        createEvent();
-    } else if (mode == "edit") {
-        updateEvent();
-    }
-    closeModal();
-});
-
-function createEvent() {
-    if (!events[currentEvent.date]) {
-        events[currentEvent.date] = {};
-    }
-    events[currentEvent.date][currentEvent.id] = currentEvent;
-    saveEvents();
-    showEvent(currentEvent);
-}
+// $("#eventModal").submit((e) => {
+//     e.preventDefault();
+//     const newTitle = $("#eventTitle").val();
+//     const newStart = $("#eventStart").val();
+//     const newEnd = $("#eventEnd").val();
+//     const newDate = $("#eventDate").val();
+//     if (events[newDate]) {
+//         const collidingEvent = Object.values(events[newDate]).find(
+//             (ev) => ev.id != currentEvent.id && ev.end > newStart && ev.start < newEnd
+//         );
+//         if (collidingEvent) {
+//             $("#errors").text(
+//                 `This collides with the event '${collidingEvent.title}'
+//                 (${collidingEvent.start} - ${collidingEvent.end}).`
+//             );
+//             return;
+//         }
+//     }
+//     const duration =
+//         (new Date(`${newDate}T${newEnd}`).getTime() -
+//             new Date(`${newDate}T${newStart}`).getTime()) /
+//         (1000 * 60);
+//     if (duration < 0) {
+//         $("#errors").text("The start cannot be after the end.");
+//         return;
+//     } else if (duration < 30) {
+//         $("#errors").text("Events should be at least 30 minutes.");
+//         return;
+//     }
+//     currentEvent.title = newTitle;
+//     currentEvent.start = newStart;
+//     currentEvent.end = newEnd;
+//     currentEvent.duration = duration;
+//     currentEvent.prevDate = currentEvent.date;
+//     currentEvent.date = newDate;
+//     currentEvent.dayIndex = getDayIndex(new Date(currentEvent.date));
+//     currentEvent.description = $("#eventDescription").val();
+//     currentEvent.color = $(".color.active").attr("data-color");
+//     if (mode == "create" || mode == "copy") {
+//         createEvent();
+//     } else if (mode == "edit") {
+//         updateEvent();
+//     }
+//     closeModal();
+// });
 
 function clickEvent() {
     const id = $(this).attr("id");
@@ -361,10 +376,6 @@ function showEvent(ev) {
     }
 }
 
-function saveEvents() {
-    localStorage.setItem("events", JSON.stringify(events));
-}
-
 $("#deleteButton").click(() => {
     delete events[currentEvent.date][currentEvent.id];
     if (Object.values(events[currentEvent.date]).length == 0) {
@@ -418,5 +429,3 @@ function changeWeek(number) {
     showWeek();
     loadEvents();
 }
-
-// auxiliary stuff
