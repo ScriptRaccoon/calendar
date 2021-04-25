@@ -166,10 +166,6 @@ function loadEvents() {
 $("#eventModal").submit((e) => {
     e.preventDefault();
     const newTitle = $("#eventTitle").val();
-    if (newTitle.length == 0) {
-        $("#errors").text("Please choose a title.");
-        return;
-    }
     const newStart = $("#eventStart").val();
     const newEnd = $("#eventEnd").val();
     const newDate = $("#eventDate").val();
@@ -178,7 +174,7 @@ $("#eventModal").submit((e) => {
             (ev) => ev.id != currentEvent.id && ev.end > newStart && ev.start < newEnd
         );
         if (collidingEvent) {
-            $("#errors").html(
+            $("#errors").text(
                 `This collides with the event '${collidingEvent.title}' 
                 (${collidingEvent.start} - ${collidingEvent.end}).`
             );
