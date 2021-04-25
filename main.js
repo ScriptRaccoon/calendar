@@ -5,6 +5,7 @@ let currentEvent = null;
 let events;
 let firstLoad = true;
 let weekOffset = 0;
+let readyToTrash = false;
 
 const slotHeight = 30;
 
@@ -299,6 +300,23 @@ $("#deleteButton").click(() => {
     saveEvents();
     $(`#${currentEvent.id}`).remove();
     closeModal();
+});
+
+$("#trashButton").click(() => {
+    if (readyToTrash) {
+        events = {};
+        saveEvents();
+        loadEvents();
+        readyToTrash = false;
+    } else {
+        readyToTrash = true;
+        window.alert(
+            "This will delete all the events in your calendar. This cannot be undone. If you are sure, click the trash can again in the next minute."
+        );
+        setTimeout(() => {
+            readyToTrash = false;
+        }, 60 * 1000);
+    }
 });
 
 // change color
