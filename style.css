@@ -173,8 +173,8 @@ body {
     position: absolute;
     z-index: 10;
     padding: 20px;
-    width: 400px;
-    min-width: 200px;
+    width: 450px;
+    min-width: 250px;
 }
 
 #modalTitle {
@@ -220,7 +220,10 @@ textarea {
 }
 
 #eventControls {
-    margin: 25px 0px 10px 0px;
+    margin-top: 25px;
+    margin-bottom: 10px;
+    display: flex;
+    justify-content: space-between;
 }
 
 .button {
