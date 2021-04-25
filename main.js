@@ -68,7 +68,8 @@ function clickSlot() {
     const date = dateString(
         new Date(weekStart.getTime() + dayIndex * 24 * 60 * 60 * 1000)
     );
-    currentEvent = { start, end, date, dayIndex };
+    const id = generateId();
+    currentEvent = { start, end, date, dayIndex, id };
     mode = "create";
     openModal();
 }
@@ -131,10 +132,11 @@ $("#addButton").click(() => {
 
 $("#copyButton").click(() => {
     if (mode != "edit") return;
-    const event = currentEvent;
+    const copy = { ...currentEvent };
+    copy.id = generateId();
     closeModal();
     mode = "copy";
-    currentEvent = event;
+    currentEvent = copy;
     openModal();
 });
 
@@ -203,7 +205,6 @@ $("#eventModal").submit((e) => {
 });
 
 function createEvent() {
-    currentEvent.id = generateId(20);
     if (!events[currentEvent.date]) {
         events[currentEvent.date] = {};
     }
@@ -324,8 +325,8 @@ function showWeek() {
     $("#weekStartDisplay").text(weekStart.toLocaleDateString(undefined, dateOptions));
     $("#weekEndDisplay").text(weekEnd.toLocaleDateString(undefined, dateOptions));
 
-    for (let i = 0; i < 7; i++) {
-        const date = new Date(weekStart.getTime() + i * 24 * 60 * 60 * 1000);
+    for (let dayIndex = 0; dayIndex < 7; dayIndex++) {
+        const date = new Date(weekStart.getTime() + dayIndex * 24 * 60 * 60 * 1000);
         const day = date.getDate().toString().padStart(2, "0");
         const month = (date.getMonth() + 1).toString().padStart(2, "0");
         $(`.day[data-dayIndex=${i}]`).find(`.dayDisplay`).text(`${day}.${month}`);
@@ -361,7 +362,7 @@ function getDayIndex(date) {
     return falseIndex == 0 ? 6 : falseIndex - 1;
 }
 
-function generateId(length) {
+function generateId(length = 20) {
     const chars = "ABCDEFGHIHJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
     let id = "";
     for (let i = 0; i < length; i++) {
