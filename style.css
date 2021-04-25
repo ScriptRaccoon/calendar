@@ -154,10 +154,21 @@ body {
     left: 1px;
     width: calc(100% - 2px);
     border-radius: 4px;
-    padding: 5px;
+    padding: 2px 5px;
     color: white;
     overflow: auto;
     cursor: pointer;
+}
+
+.shortEvent {
+    padding: 0px 5px;
+    font-size: 12px;
+}
+
+.veryShortEvent {
+    margin-top: -1px;
+    padding: 0px 5px;
+    font-size: 10px;
 }
 
 /* event modal */

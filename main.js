@@ -166,16 +166,12 @@ $("#eventModal").submit((e) => {
     e.preventDefault();
     const newTitle = $("#eventTitle").val();
     if (newTitle.length == 0) {
-        $("#errors").text("There is no title");
+        $("#errors").text("Please choose a title.");
         return;
     }
     const newStart = $("#eventStart").val();
     const newEnd = $("#eventEnd").val();
     const newDate = $("#eventDate").val();
-    if (newStart > newEnd) {
-        $("#errors").text("The start cannot be after the end.");
-        return;
-    }
     if (events[newDate]) {
         const collidingEvent = Object.values(events[newDate]).find(
             (ev) => ev.id != currentEvent.id && ev.end > newStart && ev.start < newEnd
@@ -188,9 +184,21 @@ $("#eventModal").submit((e) => {
             return;
         }
     }
+    const duration =
+        (new Date(`${newDate}T${newEnd}`).getTime() -
+            new Date(`${newDate}T${newStart}`).getTime()) /
+        (1000 * 60);
+    if (duration < 0) {
+        $("#errors").text("The start cannot be after the end.");
+        return;
+    } else if (duration < 30) {
+        $("#errors").text("Events should be at least 30 minutes.");
+        return;
+    }
     currentEvent.title = newTitle;
     currentEvent.start = newStart;
     currentEvent.end = newEnd;
+    currentEvent.duration = duration;
     currentEvent.prevDate = currentEvent.date;
     currentEvent.date = newDate;
     currentEvent.dayIndex = getDayIndex(new Date(currentEvent.date));
@@ -270,6 +278,13 @@ function showEvent(ev) {
         .attr("data-date", ev.date)
         .css("backgroundColor", `var(--color-${ev.color})`)
         .appendTo(`.slots[data-dayIndex=${ev.dayIndex}]`);
+    if (ev.duration < 45) {
+        eventSlot.removeClass("shortEvent").addClass("veryShortEvent");
+    } else if (ev.duration < 60) {
+        eventSlot.removeClass("veryShortEvent").addClass("shortEvent");
+    } else {
+        eventSlot.removeClass("shortEvent").removeClass("veryShortEvent");
+    }
 }
 
 function saveEvents() {
