@@ -10,85 +10,87 @@
 </head>
 <body>
 
-    <header id="header">
-        <div id="weekControls">
-            <i id="prevWeekBtn" class="fas fa-angle-double-left"></i>
-            <span id="weekDisplay">
-                <span id="weekStartDisplay"></span>
-                ‒ 
-                 <span id="weekEndDisplay"></span>
-            </span>            
-            <i id="nextWeekBtn" class="fas fa-angle-double-right"></i>
-
-        </div>
-        <h1>Calendar</h1>
-        <div id="controls">
-            <i id="addButton" class="fas fa-plus"></i>
-            <i id="trashButton" class="fas fa-trash-alt"></i>
-        </div>
-    </header>
-
-    <main id="calendar">
-        <div class="daytime">            
-        </div>
-        <div data-name="Monday" data-dayIndex = "0" class="day">           
-        </div>
-        <div data-name="Tuesday" data-dayIndex = "1" class="day">           
-        </div>
-        <div data-name="Wednesday" data-dayIndex = "2" class="day">           
-        </div>
-        <div data-name="Thursday" data-dayIndex = "3" class="day">            
-        </div>
-        <div data-name="Friday" data-dayIndex = "4" class="day">           
-        </div>
-        <div data-name="Saturday" data-dayIndex = "5" class="day">            
-        </div>
-        <div data-name="Sunday" data-dayIndex = "6" class="day">           
-        </div>
-    </main>
-
-    <form id="eventModal">
-        <h2 id="modalTitle">
-        </h2>
-        <label class="descriptor">Date</label>
-        <div>
-            <input required type="date" id="eventDate"></input>
-        </div>
-        <label class="descriptor">Time</label>
-        <div>
-            <input required type="time" id="eventStart"></input> ‒ <input required type="time" id="eventEnd"></input></span>
-        </div>
-        <label class="descriptor">Title</label>
-        <div>
-            <input required type="text" id="eventTitle"></input>
-        </div>
-        <label>
-            Description
-        </label>
-        <div>
-            <textarea id="eventDescription">
-            </textarea>
-        </div>        
-        <label>
-            Color
-        </label>
-        <div id="colors">
-            <div class="color color-red" data-color = "red"></div>
-            <div class="color color-blue" data-color = "blue"></div>
-            <div class="color color-green" data-color = "green"></div>
-            <div class="color color-orange" data-color = "orange"></div>
-        </div>      
-        <div id="eventControls">
-            <input type="submit" value="Submit" class="button" id="submitButton">
-            <input type="button" value="Cancel" class="button" id="cancelButton">
-            <input type="button" value="Copy" class="button" id="copyButton">
-            <input type="button" value="Delete" class="button" id="deleteButton">
-        </div>
-        
-        <div id="errors">
-
-        </div>
-    </form>
+    <main id="container">
+        <header id="header">
+            <div id="weekControls">
+                <i id="prevWeekBtn" class="fas fa-angle-double-left"></i>
+                <span id="weekDisplay">
+                    <span id="weekStartDisplay"></span>
+                    ‒ 
+                     <span id="weekEndDisplay"></span>
+                </span>            
+                <i id="nextWeekBtn" class="fas fa-angle-double-right"></i>
+    
+            </div>
+            <h1>Calendar</h1>
+            <div id="controls">
+                <i id="addButton" class="fas fa-plus"></i>
+                <i id="trashButton" class="fas fa-trash-alt"></i>
+            </div>
+        </header>
+    
+        <section id="calendar">
+            <div class="dayTime">            
+            </div>
+            <div data-name="Monday" data-dayIndex = "0" class="day">           
+            </div>
+            <div data-name="Tuesday" data-dayIndex = "1" class="day">           
+            </div>
+            <div data-name="Wednesday" data-dayIndex = "2" class="day">           
+            </div>
+            <div data-name="Thursday" data-dayIndex = "3" class="day">            
+            </div>
+            <div data-name="Friday" data-dayIndex = "4" class="day">           
+            </div>
+            <div data-name="Saturday" data-dayIndex = "5" class="day">            
+            </div>
+            <div data-name="Sunday" data-dayIndex = "6" class="day">           
+            </div>
+        </section>
+    
+        <form id="eventModal">
+            <h2 id="modalTitle">
+            </h2>
+            <label class="descriptor">Date</label>
+            <div>
+                <input required type="date" id="eventDate"></input>
+            </div>
+            <label class="descriptor">Time</label>
+            <div>
+                <input required type="time" id="eventStart"></input> ‒ <input required type="time" id="eventEnd"></input></span>
+            </div>
+            <label class="descriptor">Title</label>
+            <div>
+                <input required type="text" id="eventTitle"></input>
+            </div>
+            <label>
+                Description
+            </label>
+            <div>
+                <textarea id="eventDescription">
+                </textarea>
+            </div>        
+            <label>
+                Color
+            </label>
+            <div id="colors">
+                <div class="color color-red" data-color = "red"></div>
+                <div class="color color-blue" data-color = "blue"></div>
+                <div class="color color-green" data-color = "green"></div>
+                <div class="color color-orange" data-color = "orange"></div>
+            </div>      
+            <div id="eventControls">
+                <input type="submit" value="Submit" class="button" id="submitButton">
+                <input type="button" value="Cancel" class="button" id="cancelButton">
+                <input type="button" value="Copy" class="button" id="copyButton">
+                <input type="button" value="Delete" class="button" id="deleteButton">
+            </div>
+            
+            <div id="errors">    
+            </div>
+            
+        </form>
+    </main>    
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
     <script src="main.js" type="module"></script>

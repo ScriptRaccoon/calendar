@@ -1,79 +1,156 @@
-// global variables
+import { dateString, generateId, getDayIndex } from "./helper.js";
 
-let mode = "view";
-let currentEvent = null;
-let events;
-let firstLoad = true;
-let weekOffset = 0;
-let readyToTrash = false;
+class Event {
+    constructor(cal) {
+        this.cal = cal;
+        this.title = null;
+        this.date = null;
+        this.start = null;
+        this.end = null;
+        this.prevDate = null;
+        this.dayIndex = null;
+        this.description = null;
+        this.color = null;
+    }
+}
 
-const slotHeight = 30;
+class Calendar {
+    constructor(container) {
+        this.container = container;
+        this.mode = "view";
+        this.currentEvent = null;
+        this.events = {};
+        this.weekOffset = 0;
+        this.readyToTrash = false;
+        this.slotHeight = 30;
+        this.dateOptions = { month: "2-digit", day: "2-digit", year: "numeric" };
+        this.weekStart = null;
+        this.weekEnd = null;
+    }
 
-const dateOptions = { month: "2-digit", day: "2-digit", year: "numeric" };
-let weekStart, weekEnd;
+    setup() {
+        this.setupTimes();
+        this.setupDays();
+        this.calculateCurrentWeek();
+        this.showWeek();
+        // loadEvents();
+    }
+
+    setupTimes() {
+        const dayTime = this.container.find(".dayTime");
+        const header = $("<div></div>").addClass("columnHeader");
+        const slots = $("<div></div>").addClass("slots");
+        for (let hour = 0; hour < 24; hour++) {
+            $("<div></div>")
+                .attr("data-hour", hour)
+                .addClass("time")
+                .text(`${hour}:00 - ${hour + 1}:00`)
+                .appendTo(slots);
+        }
+        dayTime.append(header).append(slots);
+    }
+
+    setupDays() {
+        const cal = this;
+        cal.container.find(".day").each(function () {
+            const dayIndex = parseInt($(this).attr("data-dayIndex"));
+            const name = $(this).attr("data-name");
+            const header = $("<div></div>").addClass("columnHeader").text(name);
+            const slots = $("<div></div>")
+                .addClass("slots")
+                .attr("data-dayIndex", dayIndex);
+            $("<div></div>").addClass("dayDisplay").appendTo(header);
+            for (let hour = 0; hour < 24; hour++) {
+                $("<div></div>")
+                    .attr("data-hour", hour)
+                    .appendTo(slots)
+                    .addClass("slot")
+                    .attr("data-dayIndex", dayIndex)
+                    .click(() => cal.clickSlot(hour, dayIndex))
+                    .hover(
+                        () => cal.hoverOver(hour),
+                        () => cal.hoverOut()
+                    );
+            }
+            $(this).append(header).append(slots);
+        });
+    }
+
+    calculateCurrentWeek() {
+        const now = new Date();
+        const firstDay = now.getDate() - getDayIndex(now);
+        this.weekStart = new Date(now.setDate(firstDay));
+        this.weekEnd = new Date(now.setDate(firstDay + 6));
+    }
+
+    showWeek() {
+        this.container
+            .find("#weekStartDisplay")
+            .text(this.weekStart.toLocaleDateString(undefined, this.dateOptions));
+        this.container
+            .find("#weekEndDisplay")
+            .text(this.weekEnd.toLocaleDateString(undefined, this.dateOptions));
+
+        for (let dayIndex = 0; dayIndex < 7; dayIndex++) {
+            const date = new Date(
+                this.weekStart.getTime() + dayIndex * 24 * 60 * 60 * 1000
+            );
+            const day = date.getDate().toString().padStart(2, "0");
+            const month = (date.getMonth() + 1).toString().padStart(2, "0");
+            this.container
+                .find(`.day[data-dayIndex=${dayIndex}] .dayDisplay`)
+                .text(`${day}.${month}`);
+        }
+        if (this.weekOffset == 0) {
+            this.showCurrentDay();
+        } else {
+            this.hideCurrentDay();
+        }
+    }
+
+    showCurrentDay() {
+        const now = new Date();
+        const dayIndex = getDayIndex(now);
+        this.container.find(`.day[data-dayIndex=${dayIndex}]`).addClass("currentDay");
+    }
+
+    hideCurrentDay() {
+        this.container.find(".day").removeClass("currentDay");
+    }
+
+    hoverOver(hour) {
+        this.container.find(`.time[data-hour=${hour}]`).addClass("currentTime");
+    }
+
+    hoverOut() {
+        this.container.find(".time").removeClass("currentTime");
+    }
+
+    clickSlot(hour, dayIndex) {
+        if (this.mode != "view") return;
+        this.mode = "create";
+        const start = hour.toString().padStart(2, "0") + ":00";
+        const end = ((hour + 1) % 24).toString().padStart(2, "0") + ":00";
+        const date = dateString(
+            new Date(this.weekStart.getTime() + dayIndex * 24 * 60 * 60 * 1000)
+        );
+        const id = generateId();
+        this.openModal({ start, end, date, dayIndex, id });
+    }
+
+    openModal(data) {
+        // todo
+        console.log(data);
+    }
+}
 
 // setup calendar
 
 $(() => {
-    setupCalendar();
+    new Calendar($("#container")).setup();
 });
 
-function setupCalendar() {
-    $("#calendar > *").each(function () {
-        const dayIndex = parseInt($(this).attr("data-dayIndex"));
-        const isDay = $(this).hasClass("day");
-        const header = $("<div></div>").addClass("columnHeader");
-        const slots = $("<div></div>").addClass("slots");
-        if (isDay) {
-            const name = $(this).attr("data-name");
-            header.text(name);
-            slots.attr("data-dayIndex", dayIndex);
-            $("<div></div>").addClass("dayDisplay").appendTo(header).text("01.01.");
-        }
-        for (let hour = 0; hour < 24; hour++) {
-            const slot = $("<div></div>").attr("data-hour", hour).appendTo(slots);
-            if (isDay) {
-                slot.addClass("slot")
-                    .attr("data-dayIndex", dayIndex)
-                    .click(clickSlot)
-                    .hover(hoverOverSlot, hoverOutSlot);
-            } else {
-                slot.addClass("time").text(`${hour}:00 - ${hour + 1}:00`);
-            }
-        }
-        $(this).append(header).append(slots);
-    });
-    getCurrentWeek();
-    loadEvents();
-    showCurrentDay();
-}
-
-// slot functions
-
-function hoverOverSlot() {
-    const hour = $(this).attr("data-hour");
-    $(`.time[data-hour=${hour}]`).addClass("currentTime");
-}
-
-function hoverOutSlot() {
-    $(".time").removeClass("currentTime");
-}
-
-function clickSlot() {
-    if (mode != "view") return;
-    const slot = $(this);
-    const hour = slot.attr("data-hour");
-    const start = hour.padStart(2, "0") + ":00";
-    const end = ((parseInt(hour) + 1) % 24).toString().padStart(2, "0") + ":00";
-    let dayIndex = parseInt(slot.attr("data-dayIndex"));
-    const date = dateString(
-        new Date(weekStart.getTime() + dayIndex * 24 * 60 * 60 * 1000)
-    );
-    const id = generateId();
-    currentEvent = { start, end, date, dayIndex, id };
-    mode = "create";
-    openModal();
-}
+// ----------- TO BE REFACTORED -----------
 
 // modal functions
 
@@ -342,61 +419,4 @@ function changeWeek(number) {
     loadEvents();
 }
 
-function getCurrentWeek() {
-    const now = new Date();
-    const firstDay = now.getDate() - getDayIndex(now);
-    weekStart = new Date(now.setDate(firstDay));
-    weekEnd = new Date(now.setDate(firstDay + 6));
-    showWeek();
-}
-
-function showWeek() {
-    $("#weekStartDisplay").text(weekStart.toLocaleDateString(undefined, dateOptions));
-    $("#weekEndDisplay").text(weekEnd.toLocaleDateString(undefined, dateOptions));
-
-    for (let dayIndex = 0; dayIndex < 7; dayIndex++) {
-        const date = new Date(weekStart.getTime() + dayIndex * 24 * 60 * 60 * 1000);
-        const day = date.getDate().toString().padStart(2, "0");
-        const month = (date.getMonth() + 1).toString().padStart(2, "0");
-        $(`.day[data-dayIndex=${dayIndex}]`).find(`.dayDisplay`).text(`${day}.${month}`);
-    }
-
-    if (weekOffset == 0) {
-        showCurrentDay();
-    } else {
-        hideCurrentDay();
-    }
-}
-
-function showCurrentDay() {
-    const now = new Date();
-    const dayIndex = getDayIndex(now);
-    $(`.day[data-dayIndex=${dayIndex}]`).children(".columnHeader").addClass("currentDay");
-}
-
-function hideCurrentDay() {
-    $(".columnHeader").removeClass("currentDay");
-}
-
 // auxiliary stuff
-
-function dateString(date) {
-    return `${date.getFullYear()}-${(date.getMonth() + 1)
-        .toString()
-        .padStart(2, "0")}-${date.getDate().toString().padStart(2, "0")}`;
-}
-
-function getDayIndex(date) {
-    const falseIndex = date.getDay();
-    return falseIndex == 0 ? 6 : falseIndex - 1;
-}
-
-function generateId(length = 20) {
-    const chars = "ABCDEFGHIHJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-    let id = "";
-    for (let i = 0; i < length; i++) {
-        const rand = Math.floor(Math.random() * chars.length);
-        id += chars.charAt(rand);
-    }
-    return id;
-}
