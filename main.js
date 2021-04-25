@@ -83,17 +83,23 @@ function openModal() {
     $("#eventEnd").val(currentEvent.end);
     if (mode == "edit") {
         $("#submitButton").val("Update");
-        $("#deleteButton").show();
+        $("#deleteButton, #copyButton").show();
         $("#eventTitle").val(currentEvent.title);
         $("#eventDescription").val(currentEvent.description);
         $(`.color[data-color=${currentEvent.color}]`).addClass("active");
     } else if (mode == "create") {
         $("#submitButton").val("Create");
-        $("#deleteButton").hide();
+        $("#deleteButton, #copyButton").hide();
         $(".color").removeClass("active");
         $(".color[data-color=red]").addClass("active");
         $("#eventTitle").val("");
         $("#eventDescription").val("");
+    } else if (mode == "copy") {
+        $("#submitButton").val("Create");
+        $("#deleteButton, #copyButton").hide();
+        $("#eventTitle").val(`Kopie von ${currentEvent.title}`);
+        $("#eventDescription").val(currentEvent.description);
+        $(`.color[data-color=${currentEvent.color}]`).addClass("active");
     }
     $("#eventModal").fadeIn("fast");
     $("#eventTitle").focus();
@@ -120,6 +126,15 @@ $("#addButton").click(() => {
         date: dateString(now),
         dayIndex: getDayIndex(now),
     };
+    openModal();
+});
+
+$("#copyButton").click(() => {
+    if (mode != "edit") return;
+    const event = currentEvent;
+    closeModal();
+    mode = "copy";
+    currentEvent = event;
     openModal();
 });
 
@@ -179,7 +194,7 @@ $("#eventModal").submit((e) => {
     currentEvent.dayIndex = getDayIndex(new Date(currentEvent.date));
     currentEvent.description = $("#eventDescription").val();
     currentEvent.color = $(".color.active").attr("data-color");
-    if (mode == "create") {
+    if (mode == "create" || mode == "copy") {
         createEvent();
     } else if (mode == "edit") {
         updateEvent();
@@ -262,6 +277,9 @@ function saveEvents() {
 
 $("#deleteButton").click(() => {
     delete events[currentEvent.date][currentEvent.id];
+    if (Object.values(events[currentEvent.date]).length == 0) {
+        delete events[currentEvent.date];
+    }
     saveEvents();
     $(`#${currentEvent.id}`).remove();
     closeModal();
@@ -295,10 +313,10 @@ function changeWeek(number) {
 }
 
 function getCurrentWeek() {
-    const currentDate = new Date();
-    const firstDay = currentDate.getDate() - currentDate.getDay() + 1;
-    weekStart = new Date(currentDate.setDate(firstDay));
-    weekEnd = new Date(currentDate.setDate(firstDay + 6));
+    const now = new Date();
+    const firstDay = now.getDate() - getDayIndex(now);
+    weekStart = new Date(now.setDate(firstDay));
+    weekEnd = new Date(now.setDate(firstDay + 6));
     showWeek();
 }
 
