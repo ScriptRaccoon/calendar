@@ -17,9 +17,8 @@ class Calendar {
         this.setupDays();
         this.calculateCurrentWeek();
         this.showWeek();
-        this.setupWeekControls();
-        this.setupModal();
         this.loadEventsFromLocalStorage(true);
+        this.setupControls();
     }
 
     setupTimes() {
@@ -68,13 +67,14 @@ class Calendar {
         this.weekEnd = new Date(now.setDate(firstDay + 6));
     }
 
-    setupWeekControls() {
-        $("#nextWeekBtn").click(() => {
-            this.changeWeek(1);
-        });
-        $("#prevWeekBtn").click(() => {
-            this.changeWeek(-1);
-        });
+    setupControls() {
+        $("#nextWeekBtn").click(() => this.changeWeek(1));
+        $("#prevWeekBtn").click(() => this.changeWeek(-1));
+        $("#addButton").click(() => this.addNewEvent());
+        $("#trashButton").click(() => this.deleteAllEvents());
+        $("#cancelButton").click(() => this.closeModal());
+        $("#deleteButton").click(() => this.deleteEvent());
+        $(".color").click(this.changeColor);
     }
 
     changeWeek(number) {
@@ -136,6 +136,7 @@ class Calendar {
             new Date(this.weekStart.getTime() + dayIndex * 24 * 60 * 60 * 1000)
         );
         this.openModal({
+            id: null,
             start,
             end,
             date,
@@ -145,16 +146,9 @@ class Calendar {
         });
     }
 
-    setupModal() {
-        $("#cancelButton").click(() => this.closeModal());
-        $("#deleteButton").click(() => this.deleteEvent());
-        $(".color").click(() => this.changeColor());
-    }
-
-    changeColor(col) {
-        // todo
-        // $(".color.active").removeClass("active");
-        // $(col).addClass("active");
+    changeColor() {
+        $(".color.active").removeClass("active");
+        $(this).addClass("active");
     }
 
     closeModal() {
@@ -178,11 +172,15 @@ class Calendar {
         $(`.color[data-color=${color}]`).addClass("active");
         if (this.mode == "edit") {
             $("#submitButton").val("Update");
-            $("#deleteButton, #copyButton").show();
             $("#deleteButton")
+                .show()
                 .off("click")
                 .click(() => this.deleteEvent(event));
-        } else if (this.mode == "create" || this.mode == "copy") {
+            $("#copyButton")
+                .show()
+                .off("click")
+                .click(() => this.copyEvent(event));
+        } else if (this.mode == "create") {
             $("#submitButton").val("Create");
             $("#deleteButton, #copyButton").hide();
         }
@@ -200,7 +198,7 @@ class Calendar {
     submitModal(event) {
         const valid = this.validateEvent(event);
         if (!valid) return;
-        if (this.mode == "create" || this.mode == "copy") {
+        if (this.mode == "create") {
             this.createEvent();
         } else {
             this.updateEvent(event);
@@ -276,6 +274,22 @@ class Calendar {
         }
     }
 
+    addNewEvent() {
+        if (this.mode != "view") return;
+        this.mode = "create";
+        const now = new Date();
+        this.openModal({
+            id: null,
+            start: "12:00",
+            end: "13:00",
+            date: dateString(now),
+            dayIndex: getDayIndex(now),
+            title: "",
+            description: "",
+            color: "red",
+        });
+    }
+
     updateEvent(event) {
         event.title = $("#eventTitle").val();
         event.start = $("#eventStart").val();
@@ -306,6 +320,16 @@ class Calendar {
         }
         this.events[event.date][event.id] = event;
         this.saveEventsToLocalStorage();
+    }
+
+    copyEvent(event) {
+        if (this.mode != "edit") return;
+        this.closeModal();
+        const copy = { ...event };
+        copy.title = "Copy of " + copy.title;
+        copy.id = null;
+        this.mode = "create";
+        this.openModal(copy);
     }
 
     durationOfEvent(event) {
@@ -378,54 +402,27 @@ class Calendar {
         }
         return true;
     }
-}
 
-// setup calendar
+    deleteAllEvents() {
+        if (this.readyToTrash) {
+            this.events = {};
+            this.saveEventsToLocalStorage();
+            $(".event").remove();
+            this.readyToTrash = false;
+        } else {
+            this.readyToTrash = true;
+            window.alert(
+                "This will delete all the events in your calendar. " +
+                    "This cannot be undone. If you are sure, click " +
+                    "the trash can again in the next minute."
+            );
+            setTimeout(() => {
+                this.readyToTrash = false;
+            }, 60 * 1000);
+        }
+    }
+}
 
 $(() => {
     new Calendar().setup();
-});
-
-// ----------- TO BE REFACTORED -----------
-
-// modal functions
-
-$("#addButton").click(() => {
-    if (mode != "view") return;
-    mode = "create";
-    const now = new Date();
-    currentEvent = {
-        start: "12:00",
-        end: "13:00",
-        date: dateString(now),
-        dayIndex: getDayIndex(now),
-    };
-    openModal();
-});
-
-$("#copyButton").click(() => {
-    if (mode != "edit") return;
-    const copy = { ...currentEvent };
-    copy.id = generateId();
-    closeModal();
-    mode = "copy";
-    currentEvent = copy;
-    openModal();
-});
-
-$("#trashButton").click(() => {
-    if (readyToTrash) {
-        events = {};
-        saveEvents();
-        loadEvents();
-        readyToTrash = false;
-    } else {
-        readyToTrash = true;
-        window.alert(
-            "This will delete all the events in your calendar. This cannot be undone. If you are sure, click the trash can again in the next minute."
-        );
-        setTimeout(() => {
-            readyToTrash = false;
-        }, 60 * 1000);
-    }
 });
