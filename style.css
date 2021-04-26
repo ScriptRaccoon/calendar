@@ -5,6 +5,7 @@
     --time-color: #777;
     --slot-hover-color: #eee;
     --shadow-color: rgba(0, 0, 0, 0.3);
+    --font-color: #222;
     --color-red: rgb(190, 35, 15);
     --color-blue: rgb(54, 92, 175);
     --color-green: rgb(21, 129, 21);
@@ -21,6 +22,7 @@ body {
     margin: 0;
     padding: 0;
     font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+    color: var(--font-color);
 }
 
 /* header */
@@ -47,9 +49,11 @@ body {
 }
 
 #header i:hover {
-    color: black;
-    border-color: black;
+    color: var(--font-color);
+    border-color: var(--font-color);
 }
+
+/* controls in header */
 
 #weekControls {
     position: absolute;
@@ -84,11 +88,11 @@ body {
 #calendar {
     display: flex;
     width: 100%;
-    transition: opacity 300ms linear;
+    transition: opacity 350ms ease-in;
 }
 
 #calendar.opaque {
-    opacity: 0.3;
+    opacity: 0.4;
 }
 
 /* columns */
@@ -96,6 +100,7 @@ body {
 .day {
     width: 100%;
     min-width: 110px;
+    border-left: 1px solid var(--grid-color);
 }
 
 .dayTime {
@@ -104,10 +109,6 @@ body {
     max-width: 100px;
     text-align: center;
     color: var(--time-color);
-}
-
-.day {
-    border-left: 1px solid var(--grid-color);
 }
 
 .columnHeader {
@@ -144,17 +145,17 @@ body {
     font-size: 14px;
 }
 
-.currentTime {
-    background-color: var(--slot-hover-color);
-    color: black;
-}
-
 .slot:hover {
     cursor: pointer;
     background-color: var(--slot-hover-color);
 }
 
-/* event slots */
+.currentTime {
+    background-color: var(--slot-hover-color);
+    color: var(--font-color);
+}
+
+/* events */
 
 .event {
     position: absolute;
@@ -195,6 +196,10 @@ body {
     min-width: 250px;
 }
 
+#errors {
+    color: var(--color-red);
+}
+
 #modalTitle {
     margin-bottom: 20px;
 }
@@ -204,61 +209,68 @@ textarea {
     font-family: inherit;
     font-size: inherit;
     outline: none;
-    padding: 5px;
+    border: none;
 }
 
 #eventModal label {
     font-weight: bold;
     display: inline-block;
-    margin: 20px 10px 10px 0px;
+    margin: 20px 10px 5px 0px;
 }
 
-#errors {
-    color: red;
+.shortInput {
+    border-bottom: 1px solid var(--grid-color);
+    padding: 2px 1px;
+}
+
+.shortInput:focus {
+    border-bottom: 1px solid var(--font-color);
 }
 
 #eventTitle {
-    border: none;
-    border-bottom: 1px solid #aaa;
-    width: 90%;
+    width: 95% !important;
 }
 
-#eventTitle:focus {
-    border-bottom: 1px solid #222;
+#eventStart {
+    margin-right: 10px;
+}
+
+#eventEnd {
+    margin-left: 10px;
 }
 
 #eventDescription {
-    border: 1px solid #aaa;
-    width: 90%;
-    height: 200px;
+    border: 1px solid var(--grid-color);
+    width: 95% !important;
+    height: 170px;
+    min-height: 40px;
+    resize: vertical;
+    padding: 4px;
 }
 
 #eventDescription:focus {
-    border: 1px solid #222;
+    border: 1px solid var(--font-color);
 }
 
 #eventControls {
-    margin-top: 25px;
-    margin-bottom: 10px;
-    display: flex;
-    justify-content: space-between;
+    margin: 25px 0px 10px 0px;
 }
 
 .button {
     padding: 10px 20px;
-    background-color: rgb(63, 63, 189);
+    background-color: var(--color-blue);
     color: white;
-    border: none;
     cursor: pointer;
-    margin-right: 10px;
+    margin-right: 12px;
     border-radius: 2px;
 }
 
 #deleteButton {
-    background-color: rgb(177, 28, 28);
+    background-color: var(--color-red);
 }
 
-.button:hover {
+.button:hover,
+.button:focus {
     opacity: 0.8;
 }
 
@@ -269,7 +281,7 @@ textarea {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    width: 160px;
+    width: 150px;
 }
 
 .color {
@@ -283,7 +295,7 @@ textarea {
 
 .color.active,
 .color:hover {
-    border: 5px solid #ccc;
+    border: 5px solid var(--grid-color);
 }
 
 .color-red {
