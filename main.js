@@ -3,7 +3,6 @@ import { dateString, generateId, getDayIndex } from "./helper.js";
 class Calendar {
     constructor() {
         this.mode = "view";
-        this.currentEvent = null;
         this.events = {};
         this.weekOffset = 0;
         this.readyToTrash = false;
@@ -129,8 +128,14 @@ class Calendar {
 
     setupModal() {
         $("#cancelButton").click(() => this.closeModal());
-        $("#eventModal").submit((e) => this.submitModal(e));
         $("#deleteButton").click(() => this.deleteEvent());
+        $(".color").click(() => this.changeColor());
+    }
+
+    changeColor(col) {
+        // todo
+        // $(".color.active").removeClass("active");
+        // $(col).addClass("active");
     }
 
     closeModal() {
@@ -140,8 +145,8 @@ class Calendar {
         this.mode = "view";
     }
 
-    openModal(eventData) {
-        const { start, end, date, title, description, color } = eventData;
+    openModal(event) {
+        const { start, end, date, title, description, color } = event;
         $("#modalTitle").text(
             this.mode == "edit" ? "Update your event" : "Create a new event"
         );
@@ -162,16 +167,22 @@ class Calendar {
         $("#eventModal").fadeIn("fast");
         $("#eventTitle").focus();
         $("#calendar").addClass("opaque");
+        $("#eventModal")
+            .off("submit")
+            .submit((e) => {
+                e.preventDefault();
+                this.submitModal(event);
+            });
     }
 
-    submitModal(e) {
-        e.preventDefault();
+    submitModal(event) {
         // todo: validation
         if (this.mode == "create" || this.mode == "copy") {
             this.createEvent();
         } else {
-            this.updateEvent();
+            this.updateEvent(event);
         }
+        this.closeModal();
     }
 
     createEvent() {
@@ -184,28 +195,93 @@ class Calendar {
             description: $("#eventDescription").val(),
             color: $(".color.active").attr("data-color"),
         };
-        if (!this.events[event.date]) {
-            this.events[event.date] = {};
-        }
-        this.events[event.date][event.id] = event;
-        this.saveEventsToLocalStorage();
+        event.dayIndex = getDayIndex(new Date(event.date));
+        this.saveEvent(event);
         this.showEvent(event);
     }
 
     showEvent(event) {
-        // todo
-        console.log(event);
+        if (
+            event.date < dateString(this.weekStart) ||
+            event.date > dateString(this.weekEnd)
+        ) {
+            $(`#${event.id}`).remove();
+            return;
+        }
+        const startHour = parseInt(event.start.substring(0, 2));
+        const startMinutes = parseInt(event.start.substring(3, 5));
+        const endHour = parseInt(event.end.substring(0, 2));
+        const endMinutes = parseInt(event.end.substring(3, 5));
+        let eventSlot;
+        if ($(`#${event.id}`).length) {
+            eventSlot = $(`#${event.id}`);
+        } else {
+            eventSlot = $("<div></div>")
+                .addClass("event")
+                .attr("id", event.id)
+                .attr("data-date", event.date)
+                .click(() => this.clickEvent(event));
+        }
+        eventSlot
+            .text(event.title)
+            .css(
+                "top",
+                startHour * this.slotHeight +
+                    (startMinutes / 60) * this.slotHeight +
+                    2 +
+                    "px"
+            )
+            .css(
+                "bottom",
+                24 * this.slotHeight -
+                    (endHour * this.slotHeight + (endMinutes / 60) * this.slotHeight) +
+                    1 +
+                    "px"
+            )
+            .attr("data-date", event.date)
+            .css("backgroundColor", `var(--color-${event.color})`)
+            .appendTo(`.slots[data-dayIndex=${event.dayIndex}]`);
+        // if (event.duration < 45) {
+        //     eventSlot.removeClass("shortEvent").addClass("veryShortEvent");
+        // } else if (event.duration < 60) {
+        //     eventSlot.removeClass("veryShortEvent").addClass("shortEvent");
+        // } else {
+        //     eventSlot.removeClass("shortEvent").removeClass("veryShortEvent");
+        // }
     }
 
-    updateEvent() {
-        // todo
+    updateEvent(event) {
+        event.title = $("#eventTitle").val();
+        event.start = $("#eventStart").val();
+        event.end = $("#eventEnd").val();
+        event.date = $("#eventDate").val();
+        event.description = $("#eventDescription").val();
+        event.color = $(".color.active").attr("data-color");
+        this.showEvent(event);
+        this.saveEvent(event);
     }
 
     deleteEvent() {
         // todo
     }
 
-    saveEventsToLocalStorage() {
+    clickEvent(event) {
+        if (this.mode != "view" || !event) return;
+        this.mode = "edit";
+        this.openModal(event);
+    }
+
+    saveEvent(event) {
+        if (event.prevDate && event.date != event.prevDate) {
+            delete this.events[event.prevDate][event.id];
+            if (Object.values(this.events[event.prevDate]).length == 0) {
+                delete this.events[event.prevDate];
+            }
+        }
+        if (!this.events[event.date]) {
+            this.events[event.date] = {};
+        }
+        this.events[event.date][event.id] = event;
         localStorage.setItem("events", JSON.stringify(this.events));
     }
 
@@ -215,7 +291,7 @@ class Calendar {
         if (this.events) {
             for (let dayIndex = 0; dayIndex < 7; dayIndex++) {
                 const date = dateString(
-                    new Date(weekStart.getTime() + dayIndex * 24 * 60 * 60 * 1000)
+                    new Date(this.weekStart.getTime() + dayIndex * 24 * 60 * 60 * 1000)
                 );
                 if (this.events[date]) {
                     for (const event of Object.values(this.events[date])) {
@@ -310,16 +386,6 @@ $("#copyButton").click(() => {
 //     closeModal();
 // });
 
-function clickEvent() {
-    const id = $(this).attr("id");
-    const date = $(this).attr("data-date");
-    const event = events[date][id];
-    if (!event) return;
-    currentEvent = event;
-    mode = "edit";
-    openModal();
-}
-
 function updateEvent() {
     showEvent(currentEvent);
     if (currentEvent.date != currentEvent.prevDate) {
@@ -335,46 +401,46 @@ function updateEvent() {
     saveEvents();
 }
 
-function showEvent(ev) {
-    if (ev.date < dateString(weekStart) || ev.date > dateString(weekEnd)) {
-        $(`#${ev.id}`).remove();
-        return;
-    }
-    const startHour = parseInt(ev.start.substring(0, 2));
-    const startMinutes = parseInt(ev.start.substring(3, 5));
-    const endHour = parseInt(ev.end.substring(0, 2));
-    const endMinutes = parseInt(ev.end.substring(3, 5));
-    let eventSlot;
-    if ($(`#${ev.id}`).length) {
-        eventSlot = $(`#${ev.id}`);
-    } else {
-        eventSlot = $("<div></div>")
-            .addClass("event")
-            .attr("id", ev.id)
-            .attr("data-date", ev.date)
-            .click(clickEvent);
-    }
-    eventSlot
-        .text(ev.title)
-        .css("top", startHour * slotHeight + (startMinutes / 60) * slotHeight + 2 + "px")
-        .css(
-            "bottom",
-            24 * slotHeight -
-                (endHour * slotHeight + (endMinutes / 60) * slotHeight) +
-                1 +
-                "px"
-        )
-        .attr("data-date", ev.date)
-        .css("backgroundColor", `var(--color-${ev.color})`)
-        .appendTo(`.slots[data-dayIndex=${ev.dayIndex}]`);
-    if (ev.duration < 45) {
-        eventSlot.removeClass("shortEvent").addClass("veryShortEvent");
-    } else if (ev.duration < 60) {
-        eventSlot.removeClass("veryShortEvent").addClass("shortEvent");
-    } else {
-        eventSlot.removeClass("shortEvent").removeClass("veryShortEvent");
-    }
-}
+// function showEvent(ev) {
+//     if (ev.date < dateString(weekStart) || ev.date > dateString(weekEnd)) {
+//         $(`#${ev.id}`).remove();
+//         return;
+//     }
+//     const startHour = parseInt(ev.start.substring(0, 2));
+//     const startMinutes = parseInt(ev.start.substring(3, 5));
+//     const endHour = parseInt(ev.end.substring(0, 2));
+//     const endMinutes = parseInt(ev.end.substring(3, 5));
+//     let eventSlot;
+//     if ($(`#${ev.id}`).length) {
+//         eventSlot = $(`#${ev.id}`);
+//     } else {
+//         eventSlot = $("<div></div>")
+//             .addClass("event")
+//             .attr("id", ev.id)
+//             .attr("data-date", ev.date)
+//             .click(clickEvent);
+//     }
+//     eventSlot
+//         .text(ev.title)
+//         .css("top", startHour * slotHeight + (startMinutes / 60) * slotHeight + 2 + "px")
+//         .css(
+//             "bottom",
+//             24 * slotHeight -
+//                 (endHour * slotHeight + (endMinutes / 60) * slotHeight) +
+//                 1 +
+//                 "px"
+//         )
+//         .attr("data-date", ev.date)
+//         .css("backgroundColor", `var(--color-${ev.color})`)
+//         .appendTo(`.slots[data-dayIndex=${ev.dayIndex}]`);
+//     if (ev.duration < 45) {
+//         eventSlot.removeClass("shortEvent").addClass("veryShortEvent");
+//     } else if (ev.duration < 60) {
+//         eventSlot.removeClass("veryShortEvent").addClass("shortEvent");
+//     } else {
+//         eventSlot.removeClass("shortEvent").removeClass("veryShortEvent");
+//     }
+// }
 
 $("#deleteButton").click(() => {
     delete events[currentEvent.date][currentEvent.id];
@@ -405,11 +471,11 @@ $("#trashButton").click(() => {
 
 // change color
 
-$(".color").click(function () {
-    $(".color.active").removeClass("active");
-    $(this).addClass("active");
-    currentEvent.color = $(this).attr("data-color");
-});
+// $(".color").click(function () {
+//     $(".color.active").removeClass("active");
+//     $(this).addClass("active");
+//     currentEvent.color = $(this).attr("data-color");
+// });
 
 // week functions
 
