@@ -18,3 +18,5 @@ export function generateId(length = 20) {
     }
     return id;
 }
+
+export const dayInMillis = 1000 * 60 * 60 * 24;
