@@ -1,4 +1,5 @@
 import { dateString, generateId, getDayIndex, dayInMillis } from "./helper.js";
+import { Event } from "./Event.js";
 
 class Calendar {
     constructor() {
@@ -199,80 +200,81 @@ class Calendar {
         const valid = this.validateEvent(event);
         if (!valid) return;
         if (this.mode == "create") {
-            this.createEvent();
+            this.createEventFromModal();
         } else {
             this.updateEvent(event);
         }
         this.closeModal();
     }
 
-    createEvent() {
-        const event = {
-            id: generateId(),
+    // event functions (to be moved to a separate class)
+
+    createEventFromModal() {
+        const event = new Event({
+            calendar: this,
             title: $("#eventTitle").val(),
             start: $("#eventStart").val(),
             end: $("#eventEnd").val(),
             date: $("#eventDate").val(),
             description: $("#eventDescription").val(),
             color: $(".color.active").attr("data-color"),
-        };
-        event.dayIndex = getDayIndex(new Date(event.date));
-        this.saveEvent(event);
-        this.showEvent(event);
+        });
+        event.save();
+        event.show();
     }
 
-    showEvent(event) {
-        if (
-            event.date < dateString(this.weekStart) ||
-            event.date > dateString(this.weekEnd)
-        ) {
-            $(`#${event.id}`).remove();
-            return;
-        }
-        const startHour = parseInt(event.start.substring(0, 2));
-        const startMinutes = parseInt(event.start.substring(3, 5));
-        const endHour = parseInt(event.end.substring(0, 2));
-        const endMinutes = parseInt(event.end.substring(3, 5));
-        let eventSlot;
-        if ($(`#${event.id}`).length) {
-            eventSlot = $(`#${event.id}`);
-        } else {
-            eventSlot = $("<div></div>")
-                .addClass("event")
-                .attr("id", event.id)
-                .attr("data-date", event.date)
-                .click(() => this.clickEvent(event));
-        }
-        eventSlot
-            .text(event.title)
-            .css(
-                "top",
-                startHour * this.slotHeight +
-                    (startMinutes / 60) * this.slotHeight +
-                    2 +
-                    "px"
-            )
-            .css(
-                "bottom",
-                24 * this.slotHeight -
-                    (endHour * this.slotHeight + (endMinutes / 60) * this.slotHeight) +
-                    1 +
-                    "px"
-            )
-            .attr("data-date", event.date)
-            .css("backgroundColor", `var(--color-${event.color})`)
-            .appendTo(`.slots[data-dayIndex=${event.dayIndex}]`);
+    // showEvent(event) {
+    //     if (
+    //         event.date < dateString(this.weekStart) ||
+    //         event.date > dateString(this.weekEnd)
+    //     ) {
+    //         $(`#${event.id}`).remove();
+    //         return;
+    //     }
+    //     const startHour = parseInt(event.start.substring(0, 2));
+    //     const startMinutes = parseInt(event.start.substring(3, 5));
+    //     const endHour = parseInt(event.end.substring(0, 2));
+    //     const endMinutes = parseInt(event.end.substring(3, 5));
+    //     let eventSlot;
+    //     if ($(`#${event.id}`).length) {
+    //         eventSlot = $(`#${event.id}`);
+    //     } else {
+    //         eventSlot = $("<div></div>")
+    //             .addClass("event")
+    //             .attr("id", event.id)
+    //             .attr("data-date", event.date)
+    //             .click(() => this.clickEvent(event));
+    //     }
+    //     eventSlot
+    //         .text(event.title)
+    //         .css(
+    //             "top",
+    //             startHour * this.slotHeight +
+    //                 (startMinutes / 60) * this.slotHeight +
+    //                 2 +
+    //                 "px"
+    //         )
+    //         .css(
+    //             "bottom",
+    //             24 * this.slotHeight -
+    //                 (endHour * this.slotHeight + (endMinutes / 60) * this.slotHeight) +
+    //                 1 +
+    //                 "px"
+    //         )
+    //         .attr("data-date", event.date)
+    //         .css("backgroundColor", `var(--color-${event.color})`)
+    //         .appendTo(`.slots[data-dayIndex=${event.dayIndex}]`);
 
-        const duration = this.durationOfEvent(event);
+    //     const duration = this.durationOfEvent(event);
 
-        if (duration < 45) {
-            eventSlot.removeClass("shortEvent").addClass("veryShortEvent");
-        } else if (duration < 60) {
-            eventSlot.removeClass("veryShortEvent").addClass("shortEvent");
-        } else {
-            eventSlot.removeClass("shortEvent").removeClass("veryShortEvent");
-        }
-    }
+    //     if (duration < 45) {
+    //         eventSlot.removeClass("shortEvent").addClass("veryShortEvent");
+    //     } else if (duration < 60) {
+    //         eventSlot.removeClass("veryShortEvent").addClass("shortEvent");
+    //     } else {
+    //         eventSlot.removeClass("shortEvent").removeClass("veryShortEvent");
+    //     }
+    // }
 
     addNewEvent() {
         if (this.mode != "view") return;
@@ -302,25 +304,25 @@ class Calendar {
         this.saveEvent(event);
     }
 
-    clickEvent(event) {
-        if (this.mode != "view" || !event) return;
-        this.mode = "edit";
-        this.openModal(event);
-    }
+    // clickEvent(event) {
+    //     if (this.mode != "view" || !event) return;
+    //     this.mode = "edit";
+    //     this.openModal(event);
+    // }
 
-    saveEvent(event) {
-        if (event.prevDate && event.date != event.prevDate) {
-            delete this.events[event.prevDate][event.id];
-            if (Object.values(this.events[event.prevDate]).length == 0) {
-                delete this.events[event.prevDate];
-            }
-        }
-        if (!this.events[event.date]) {
-            this.events[event.date] = {};
-        }
-        this.events[event.date][event.id] = event;
-        this.saveEventsToLocalStorage();
-    }
+    // saveEvent(event) {
+    //     if (event.prevDate && event.date != event.prevDate) {
+    //         delete this.events[event.prevDate][event.id];
+    //         if (Object.values(this.events[event.prevDate]).length == 0) {
+    //             delete this.events[event.prevDate];
+    //         }
+    //     }
+    //     if (!this.events[event.date]) {
+    //         this.events[event.date] = {};
+    //     }
+    //     this.events[event.date][event.id] = event;
+    //     this.saveEventsToLocalStorage();
+    // }
 
     copyEvent(event) {
         if (this.mode != "edit") return;
@@ -332,13 +334,13 @@ class Calendar {
         this.openModal(copy);
     }
 
-    durationOfEvent(event) {
-        return (
-            (new Date(`${event.date}T${event.end}`).getTime() -
-                new Date(`${event.date}T${event.start}`).getTime()) /
-            (1000 * 60)
-        );
-    }
+    // durationOfEvent(event) {
+    //     return (
+    //         (new Date(`${event.date}T${event.end}`).getTime() -
+    //             new Date(`${event.date}T${event.start}`).getTime()) /
+    //         (1000 * 60)
+    //     );
+    // }
 
     saveEventsToLocalStorage() {
         localStorage.setItem("events", JSON.stringify(this.events));
