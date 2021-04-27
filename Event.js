@@ -1,7 +1,5 @@
 import { getDayIndex, generateId, dateString } from "./helper.js";
 
-// WORK IN PROGRESS
-
 export class Event {
     constructor(data) {
         this.calendar = data.calendar;
@@ -66,7 +64,6 @@ export class Event {
             $(`#${this.id}`).remove();
             return;
         }
-        // todo: das als get-variable
         let eventSlot;
         if ($(`#${this.id}`).length) {
             eventSlot = $(`#${this.id}`);
@@ -103,5 +100,71 @@ export class Event {
         if (this.calendar.mode != "view") return;
         this.calendar.mode = "edit";
         this.calendar.openModal(this);
+    }
+
+    update() {
+        this.title = $("#eventTitle").val();
+        this.start = $("#eventStart").val();
+        this.end = $("#eventEnd").val();
+        this.date = $("#eventDate").val();
+        this.description = $("#eventDescription").val();
+        this.color = $(".color.active").attr("data-color");
+        this.show();
+        this.save();
+    }
+
+    copy() {
+        if (this.calendar.mode != "edit") return;
+        this.calendar.closeModal();
+        this.calendar.mode = "create";
+        this.calendar.openModal({
+            calendar: this.calendar,
+            title: "Copy of " + this.title,
+            start: this.start,
+            end: this.end,
+            date: this.date,
+            description: this.description,
+            color: this.color,
+        });
+    }
+
+    delete() {
+        this.calendar.closeModal();
+        $(`#${this.id}`).remove();
+        delete this.calendar.events[this.date][this.id];
+        if (Object.values(this.calendar.events[this.date]).length == 0) {
+            delete this.calendar.events[this.date];
+        }
+        // this.saveEventsToLocalStorage();
+    }
+
+    isValid() {
+        const newStart = $("#eventStart").val();
+        const newEnd = $("#eventEnd").val();
+        const newDate = $("#eventDate").val();
+        if (this.calendar.events[newDate]) {
+            const ev = Object.values(this.calendar.events[newDate]).find(
+                (ev) => ev.id != this.id && ev.end > newStart && ev.start < newEnd
+            );
+            if (ev) {
+                $("#errors").text(
+                    `This collides with the event '${ev.title}'
+                (${ev.start} - ${ev.end}).`
+                );
+                return false;
+            }
+        }
+        const duration =
+            (new Date(`${newDate}T${newEnd}`).getTime() -
+                new Date(`${newDate}T${newStart}`).getTime()) /
+            (1000 * 60);
+        if (duration < 0) {
+            $("#errors").text("The start cannot be after the end.");
+            return false;
+        } else if (duration < 30) {
+            $("#errors").text("Events should be at least 30 minutes.");
+            return false;
+        }
+        return true;
     }
 }
