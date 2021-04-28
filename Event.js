@@ -2,12 +2,12 @@ import { getDayIndex, generateId, dateString } from "./helper.js";
 
 export class Event {
     constructor(data) {
-        this.calendar = data.calendar;
-        this.id = generateId();
+        this.id = data.id || generateId();
         this.title = data.title;
         this.start = data.start;
         this.end = data.end;
         this.date = data.date;
+        this.prevDate = this.date;
         this.description = data.description;
         this.color = data.color;
     }
@@ -40,26 +40,24 @@ export class Event {
         return parseInt(this.end.substring(3, 5));
     }
 
-    save() {
-        const events = this.calendar.events;
+    save(calendar) {
         if (this.prevDate && this.date != this.prevDate) {
-            delete events[this.prevDate][this.id];
-            if (Object.values(events[this.prevDate]).length == 0) {
-                delete events[this.prevDate];
+            delete calendar.events[this.prevDate][this.id];
+            if (Object.values(calendar.events[this.prevDate]).length == 0) {
+                delete calendar.events[this.prevDate];
             }
         }
-        if (!events[this.date]) {
-            events[this.date] = {};
+        if (!calendar.events[this.date]) {
+            calendar.events[this.date] = {};
         }
-        events[this.date][this.id] = this;
-        // this.saveEventsToLocalStorage(); // todo
-        // wollen/können wir ein Event so im localStorage speichern?
+        calendar.events[this.date][this.id] = this;
+        calendar.saveEventsToLocalStorage();
     }
 
-    show() {
+    show(calendar) {
         if (
-            this.date < dateString(this.calendar.weekStart) ||
-            this.date > dateString(this.calendar.weekEnd)
+            this.date < dateString(calendar.weekStart) ||
+            this.date > dateString(calendar.weekEnd)
         ) {
             $(`#${this.id}`).remove();
             return;
@@ -72,9 +70,9 @@ export class Event {
                 .addClass("event")
                 .attr("id", this.id)
                 .attr("data-date", this.date)
-                .click(() => this.click());
+                .click(() => this.click(calendar));
         }
-        const h = this.calendar.slotHeight;
+        const h = calendar.slotHeight;
         eventSlot
             .text(this.title)
             .css("top", this.startHour * h + (this.startMinutes / 60) * h + 2 + "px")
@@ -96,29 +94,29 @@ export class Event {
         }
     }
 
-    click() {
-        if (this.calendar.mode != "view") return;
-        this.calendar.mode = "edit";
-        this.calendar.openModal(this);
+    click(calendar) {
+        if (calendar.mode != "view") return;
+        calendar.mode = "edit";
+        calendar.openModal(this);
     }
 
-    update() {
+    update(calendar) {
+        this.prevDate = this.date;
         this.title = $("#eventTitle").val();
         this.start = $("#eventStart").val();
         this.end = $("#eventEnd").val();
         this.date = $("#eventDate").val();
         this.description = $("#eventDescription").val();
         this.color = $(".color.active").attr("data-color");
-        this.show();
-        this.save();
+        this.save(calendar);
+        this.show(calendar);
     }
 
-    copy() {
-        if (this.calendar.mode != "edit") return;
-        this.calendar.closeModal();
-        this.calendar.mode = "create";
-        this.calendar.openModal({
-            calendar: this.calendar,
+    copy(calendar) {
+        if (calendar.mode != "edit") return;
+        calendar.closeModal();
+        calendar.mode = "create";
+        const copy = new Event({
             title: "Copy of " + this.title,
             start: this.start,
             end: this.end,
@@ -126,24 +124,25 @@ export class Event {
             description: this.description,
             color: this.color,
         });
+        calendar.openModal(copy);
     }
 
-    delete() {
-        this.calendar.closeModal();
+    delete(calendar) {
+        calendar.closeModal();
         $(`#${this.id}`).remove();
-        delete this.calendar.events[this.date][this.id];
-        if (Object.values(this.calendar.events[this.date]).length == 0) {
-            delete this.calendar.events[this.date];
+        delete calendar.events[this.date][this.id];
+        if (Object.values(calendar.events[this.date]).length == 0) {
+            delete calendar.events[this.date];
         }
-        // this.saveEventsToLocalStorage();
+        calendar.saveEventsToLocalStorage();
     }
 
-    isValid() {
+    isValid(calendar) {
         const newStart = $("#eventStart").val();
         const newEnd = $("#eventEnd").val();
         const newDate = $("#eventDate").val();
-        if (this.calendar.events[newDate]) {
-            const ev = Object.values(this.calendar.events[newDate]).find(
+        if (calendar.events[newDate]) {
+            const ev = Object.values(calendar.events[newDate]).find(
                 (ev) => ev.id != this.id && ev.end > newStart && ev.start < newEnd
             );
             if (ev) {

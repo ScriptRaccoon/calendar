@@ -136,7 +136,6 @@ export class Calendar {
             new Date(this.weekStart.getTime() + dayIndex * 24 * 60 * 60 * 1000)
         );
         const event = new Event({
-            calendar: this,
             start,
             end,
             date,
@@ -150,13 +149,6 @@ export class Calendar {
     changeColor() {
         $(".color.active").removeClass("active");
         $(this).addClass("active");
-    }
-
-    closeModal() {
-        $("#eventModal").hide();
-        $("#errors").text("");
-        $("#calendar").removeClass("opaque");
-        this.mode = "view";
     }
 
     openModal(event) {
@@ -175,11 +167,11 @@ export class Calendar {
             $("#deleteButton")
                 .show()
                 .off("click")
-                .click(() => event.delete());
+                .click(() => event.delete(this));
             $("#copyButton")
                 .show()
                 .off("click")
-                .click(() => event.copy());
+                .click(() => event.copy(this));
         } else if (this.mode == "create") {
             $("#submitButton").val("Create");
             $("#deleteButton, #copyButton").hide();
@@ -196,9 +188,16 @@ export class Calendar {
     }
 
     submitModal(event) {
-        if (!event.isValid()) return;
-        event.update();
+        if (!event.isValid(this)) return;
+        event.update(this);
         this.closeModal();
+    }
+
+    closeModal() {
+        $("#eventModal").hide();
+        $("#errors").text("");
+        $("#calendar").removeClass("opaque");
+        this.mode = "view";
     }
 
     addNewEvent() {
@@ -206,7 +205,6 @@ export class Calendar {
         this.mode = "create";
         const now = new Date();
         const event = new Event({
-            calendar: this,
             start: "12:00",
             end: "13:00",
             date: dateString(now),
@@ -223,7 +221,17 @@ export class Calendar {
 
     loadEventsFromLocalStorage(firstTime = false) {
         $(".event").remove();
-        if (firstTime) this.events = JSON.parse(localStorage.getItem("events"));
+        if (firstTime) {
+            this.events = JSON.parse(localStorage.getItem("events"));
+            if (this.events) {
+                for (const date of Object.keys(this.events)) {
+                    for (const id of Object.keys(this.events[date])) {
+                        const event = new Event(this.events[date][id]);
+                        this.events[date][id] = event;
+                    }
+                }
+            }
+        }
         if (this.events) {
             for (let dayIndex = 0; dayIndex < 7; dayIndex++) {
                 const date = dateString(
@@ -231,7 +239,7 @@ export class Calendar {
                 );
                 if (this.events[date]) {
                     for (const event of Object.values(this.events[date])) {
-                        event.show();
+                        event.show(this);
                     }
                 }
             }
