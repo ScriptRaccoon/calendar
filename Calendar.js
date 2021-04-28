@@ -1,4 +1,4 @@
-import { dateString, getDayIndex, dayInMillis } from "./helper.js";
+import { dateString, getDayIndex, addDays } from "./helper.js";
 import { Event } from "./Event.js";
 
 export class Calendar {
@@ -8,7 +8,6 @@ export class Calendar {
         this.weekOffset = 0;
         this.readyToTrash = false;
         this.slotHeight = 30;
-        this.dateOptions = { month: "2-digit", day: "2-digit", year: "numeric" };
         this.weekStart = null;
         this.weekEnd = null;
     }
@@ -78,29 +77,31 @@ export class Calendar {
     }
 
     changeWeek(number) {
-        const offset = number * dayInMillis * 7;
         this.weekOffset += number;
-        this.weekStart = new Date(this.weekStart.getTime() + offset);
-        this.weekEnd = new Date(this.weekEnd.getTime() + offset);
+        this.weekStart = addDays(this.weekStart, 7 * number);
+        this.weekEnd = addDays(this.weekEnd, 7 * number);
         this.showWeek();
         this.loadEventsFromLocalStorage();
     }
 
     showWeek() {
+        const options = {
+            month: "2-digit",
+            day: "2-digit",
+            year: "numeric",
+        };
         $("#weekStartDisplay").text(
-            this.weekStart.toLocaleDateString(undefined, this.dateOptions)
+            this.weekStart.toLocaleDateString(undefined, options)
         );
-        $("#weekEndDisplay").text(
-            this.weekEnd.toLocaleDateString(undefined, this.dateOptions)
-        );
+        $("#weekEndDisplay").text(this.weekEnd.toLocaleDateString(undefined, options));
 
         for (let dayIndex = 0; dayIndex < 7; dayIndex++) {
-            const date = new Date(
-                this.weekStart.getTime() + dayIndex * 24 * 60 * 60 * 1000
-            );
-            const day = date.getDate().toString().padStart(2, "0");
-            const month = (date.getMonth() + 1).toString().padStart(2, "0");
-            $(`.day[data-dayIndex=${dayIndex}] .dayDisplay`).text(`${day}.${month}`);
+            const date = addDays(this.weekStart, dayIndex);
+            const display = date.toLocaleDateString(undefined, {
+                month: "2-digit",
+                day: "2-digit",
+            });
+            $(`.day[data-dayIndex=${dayIndex}] .dayDisplay`).text(display);
         }
         if (this.weekOffset == 0) {
             this.showCurrentDay();
@@ -132,9 +133,8 @@ export class Calendar {
         this.mode = "create";
         const start = hour.toString().padStart(2, "0") + ":00";
         const end = ((hour + 1) % 24).toString().padStart(2, "0") + ":00";
-        const date = dateString(
-            new Date(this.weekStart.getTime() + dayIndex * 24 * 60 * 60 * 1000)
-        );
+
+        const date = dateString(addDays(this.weekStart, dayIndex));
         const event = new Event({
             start,
             end,
@@ -234,9 +234,7 @@ export class Calendar {
         }
         if (this.events) {
             for (let dayIndex = 0; dayIndex < 7; dayIndex++) {
-                const date = dateString(
-                    new Date(this.weekStart.getTime() + dayIndex * dayInMillis)
-                );
+                const date = dateString(addDays(this.weekStart, dayIndex));
                 if (this.events[date]) {
                     for (const event of Object.values(this.events[date])) {
                         event.show(this);

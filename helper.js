@@ -9,6 +9,12 @@ export function getDayIndex(date) {
     return falseIndex == 0 ? 6 : falseIndex - 1;
 }
 
+const dayInMillis = 1000 * 60 * 60 * 24;
+
+export function addDays(date, number) {
+    return new Date(date.getTime() + number * dayInMillis);
+}
+
 export function generateId(length = 20) {
     const chars = "ABCDEFGHIHJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
     let id = "";
@@ -18,5 +24,3 @@ export function generateId(length = 20) {
     }
     return id;
 }
-
-export const dayInMillis = 1000 * 60 * 60 * 24;
