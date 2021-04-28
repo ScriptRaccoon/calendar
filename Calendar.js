@@ -132,7 +132,10 @@ export class Calendar {
         if (this.mode != "view") return;
         this.mode = "create";
         const start = hour.toString().padStart(2, "0") + ":00";
-        const end = ((hour + 1) % 24).toString().padStart(2, "0") + ":00";
+        const end =
+            hour < 23
+                ? (hour + 1).toString().padStart(2, "0") + ":00"
+                : hour.toString().padStart(2, "0") + ":59";
 
         const date = dateString(addDays(this.weekStart, dayIndex));
         const event = new Event({

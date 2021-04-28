@@ -87,7 +87,7 @@ export class Event {
         const duration = this.duration;
         if (duration < 45) {
             eventSlot.removeClass("shortEvent").addClass("veryShortEvent");
-        } else if (duration < 60) {
+        } else if (duration < 59) {
             eventSlot.removeClass("veryShortEvent").addClass("shortEvent");
         } else {
             eventSlot.removeClass("shortEvent").removeClass("veryShortEvent");
