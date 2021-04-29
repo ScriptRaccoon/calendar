@@ -250,6 +250,7 @@ export class Calendar {
     }
 
     trash() {
+        if (this.mode != "view") return;
         if (this.readyToTrash) {
             this.readyToTrash = false;
             this.events = {};
