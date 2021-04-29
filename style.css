@@ -89,6 +89,7 @@ body {
     display: flex;
     width: 100%;
     transition: opacity 200ms ease-in;
+    border-bottom: 1px solid var(--grid-color);
 }
 
 #calendar.opaque {
@@ -117,6 +118,10 @@ body {
     padding: 10px 0px;
     height: 60px;
     overflow: hidden;
+}
+
+.day .columnHeader {
+    border-top: 1px solid var(--grid-color);
 }
 
 .day.currentDay .columnHeader {
