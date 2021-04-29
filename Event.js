@@ -1,9 +1,9 @@
 import { getDayIndex, generateId, dateString } from "./helper.js";
 
 export const MODE = {
-    VIEW: 0,
-    EDIT: 1,
-    CREATE: 2,
+    VIEW: 1,
+    UPDATE: 2,
+    CREATE: 3,
 };
 
 export class Event {
@@ -97,7 +97,7 @@ export class Event {
 
     clickIn(calendar) {
         if (calendar.mode != MODE.VIEW) return;
-        calendar.mode = MODE.EDIT;
+        calendar.mode = MODE.UPDATE;
         calendar.openModal(this);
     }
 
@@ -114,7 +114,7 @@ export class Event {
     }
 
     copyIn(calendar) {
-        if (calendar.mode != MODE.EDIT) return;
+        if (calendar.mode != MODE.UPDATE) return;
         calendar.closeModal();
         calendar.mode = MODE.CREATE;
         const copy = new Event({

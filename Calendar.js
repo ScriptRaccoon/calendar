@@ -153,7 +153,7 @@ export class Calendar {
 
     openModal(event) {
         $("#modalTitle").text(
-            this.mode == MODE.EDIT ? "Update your event" : "Create a new event"
+            this.mode == MODE.UPDATE ? "Update your event" : "Create a new event"
         );
         $("#eventTitle").val(event.title);
         $("#eventDate").val(event.date);
@@ -162,7 +162,7 @@ export class Calendar {
         $("#eventDescription").val(event.description);
         $(".color").removeClass("active");
         $(`.color[data-color=${event.color}]`).addClass("active");
-        if (this.mode == MODE.EDIT) {
+        if (this.mode == MODE.UPDATE) {
             $("#submitButton").val("Update");
             $("#deleteButton")
                 .show()
@@ -172,7 +172,7 @@ export class Calendar {
                 .show()
                 .off("click")
                 .click(() => event.copyIn(this));
-        } else if (this.mode == MODE.EDIT) {
+        } else if (this.mode == MODE.CREATE) {
             $("#submitButton").val("Create");
             $("#deleteButton, #copyButton").hide();
         }
