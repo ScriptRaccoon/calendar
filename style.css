@@ -10,6 +10,7 @@
     --color-blue: rgb(54, 92, 175);
     --color-green: rgb(21, 129, 21);
     --color-orange: rgb(233, 153, 4);
+    --slotHeight: 30px;
 }
 
 * {
@@ -19,15 +20,21 @@
 }
 
 body {
-    margin: 0;
-    padding: 0;
     font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
     color: var(--font-color);
 }
 
+input,
+textarea {
+    font-family: inherit;
+    font-size: inherit;
+    outline: none;
+    border: none;
+}
+
 /* header */
 
-#header {
+.header {
     text-align: center;
     padding: 20px 10px;
     position: relative;
@@ -36,37 +43,37 @@ body {
     justify-content: center;
 }
 
-#header h1 {
+.header h1 {
     color: var(--color-blue);
     font-weight: 400;
 }
 
-#header i {
+.header i {
     cursor: pointer;
     margin: 0px 5px;
     color: var(--time-color);
     transition: all 80ms linear;
 }
 
-#header i:hover {
+.header i:hover {
     color: var(--font-color);
     border-color: var(--font-color);
 }
 
-/* controls in header */
+/* controls */
 
-#weekControls {
+.weekControls {
     position: absolute;
     left: 20px;
     font-size: 22px;
 }
 
-#controls {
+.generalControls {
     position: absolute;
     right: 20px;
 }
 
-#controls i {
+.generalControls i {
     line-height: 25px;
     display: inline-block;
     width: 30px;
@@ -75,11 +82,11 @@ body {
     border-radius: 50%;
 }
 
-#controls .fa-plus {
+.generalControls .fa-plus {
     font-size: 20px;
 }
 
-#controls .fa-trash-alt {
+.generalControls .fa-trash-alt {
     font-size: 18px;
 }
 
@@ -98,18 +105,18 @@ body {
 
 /* columns */
 
-.day {
-    width: 100%;
-    min-width: 110px;
-    border-left: 1px solid var(--grid-color);
-}
-
 .dayTime {
     width: 100%;
     min-width: 100px;
     max-width: 100px;
     text-align: center;
     color: var(--time-color);
+}
+
+.day {
+    width: 100%;
+    min-width: 110px;
+    border-left: 1px solid var(--grid-color);
 }
 
 .columnHeader {
@@ -142,8 +149,7 @@ body {
 .slot,
 .time {
     border-top: 1px solid var(--grid-color);
-    height: 30px;
-    line-height: 30px;
+    height: var(--slotHeight);
 }
 
 .time {
@@ -155,7 +161,7 @@ body {
     background-color: var(--slot-hover-color);
 }
 
-.currentTime {
+.time.currentTime {
     background-color: var(--slot-hover-color);
     color: var(--font-color);
 }
@@ -169,7 +175,7 @@ body {
     border-radius: 4px;
     padding: 2px 5px;
     color: white;
-    overflow: auto;
+    overflow: hidden;
     cursor: pointer;
 }
 
@@ -207,14 +213,6 @@ body {
 
 #modalTitle {
     margin-bottom: 20px;
-}
-
-input,
-textarea {
-    font-family: inherit;
-    font-size: inherit;
-    outline: none;
-    border: none;
 }
 
 #eventModal label {
@@ -290,8 +288,8 @@ textarea {
 }
 
 .color {
-    width: 20px;
-    height: 20px;
+    width: 20px !important;
+    height: 20px !important;
     border-radius: 50%;
     border: 5px solid white;
     box-sizing: content-box;
@@ -299,6 +297,7 @@ textarea {
 }
 
 .color.active,
+.color:focus,
 .color:hover {
     border: 5px solid var(--grid-color);
 }

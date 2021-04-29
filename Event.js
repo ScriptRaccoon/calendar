@@ -1,5 +1,11 @@
 import { getDayIndex, generateId, dateString } from "./helper.js";
 
+export const MODE = {
+    VIEW: 0,
+    EDIT: 1,
+    CREATE: 2,
+};
+
 export class Event {
     constructor(data) {
         this.id = data.id || generateId();
@@ -40,7 +46,7 @@ export class Event {
         return parseInt(this.end.substring(3, 5));
     }
 
-    save(calendar) {
+    saveIn(calendar) {
         if (this.prevDate && this.date != this.prevDate) {
             delete calendar.events[this.prevDate][this.id];
             if (Object.values(calendar.events[this.prevDate]).length == 0) {
@@ -51,10 +57,10 @@ export class Event {
             calendar.events[this.date] = {};
         }
         calendar.events[this.date][this.id] = this;
-        calendar.saveEventsToLocalStorage();
+        calendar.saveEvents();
     }
 
-    show(calendar) {
+    showIn(calendar) {
         if (
             this.date < dateString(calendar.weekStart) ||
             this.date > dateString(calendar.weekEnd)
@@ -69,20 +75,15 @@ export class Event {
             eventSlot = $("<div></div>")
                 .addClass("event")
                 .attr("id", this.id)
-                .attr("data-date", this.date)
-                .click(() => this.click(calendar));
+                .click(() => this.clickIn(calendar));
         }
         const h = calendar.slotHeight;
         eventSlot
             .text(this.title)
-            .css("top", this.startHour * h + (this.startMinutes / 60) * h + 2 + "px")
-            .css(
-                "bottom",
-                24 * h - (this.endHour * h + (this.endMinutes / 60) * h) + 1 + "px"
-            )
-            .attr("data-date", this.date)
+            .css("top", (this.startHour + this.startMinutes / 60) * h + 2 + "px")
+            .css("bottom", 24 * h - (this.endHour + this.endMinutes / 60) * h + 1 + "px")
             .css("backgroundColor", `var(--color-${this.color})`)
-            .appendTo(`.slots[data-dayIndex=${this.dayIndex}]`);
+            .appendTo(`.day[data-dayIndex=${this.dayIndex}] .slots`);
 
         const duration = this.duration;
         if (duration < 45) {
@@ -94,13 +95,13 @@ export class Event {
         }
     }
 
-    click(calendar) {
-        if (calendar.mode != "view") return;
-        calendar.mode = "edit";
+    clickIn(calendar) {
+        if (calendar.mode != MODE.VIEW) return;
+        calendar.mode = MODE.EDIT;
         calendar.openModal(this);
     }
 
-    update(calendar) {
+    updateIn(calendar) {
         this.prevDate = this.date;
         this.title = $("#eventTitle").val();
         this.start = $("#eventStart").val();
@@ -108,14 +109,14 @@ export class Event {
         this.date = $("#eventDate").val();
         this.description = $("#eventDescription").val();
         this.color = $(".color.active").attr("data-color");
-        this.save(calendar);
-        this.show(calendar);
+        this.saveIn(calendar);
+        this.showIn(calendar);
     }
 
-    copy(calendar) {
-        if (calendar.mode != "edit") return;
+    copyIn(calendar) {
+        if (calendar.mode != MODE.EDIT) return;
         calendar.closeModal();
-        calendar.mode = "create";
+        calendar.mode = MODE.CREATE;
         const copy = new Event({
             title: "Copy of " + this.title,
             start: this.start,
@@ -127,28 +128,29 @@ export class Event {
         calendar.openModal(copy);
     }
 
-    delete(calendar) {
+    deleteIn(calendar) {
         calendar.closeModal();
         $(`#${this.id}`).remove();
         delete calendar.events[this.date][this.id];
         if (Object.values(calendar.events[this.date]).length == 0) {
             delete calendar.events[this.date];
         }
-        calendar.saveEventsToLocalStorage();
+        calendar.saveEvents();
     }
 
-    isValid(calendar) {
+    isValidIn(calendar) {
         const newStart = $("#eventStart").val();
         const newEnd = $("#eventEnd").val();
         const newDate = $("#eventDate").val();
         if (calendar.events[newDate]) {
-            const ev = Object.values(calendar.events[newDate]).find(
-                (ev) => ev.id != this.id && ev.end > newStart && ev.start < newEnd
+            const event = Object.values(calendar.events[newDate]).find(
+                (event) =>
+                    event.id != this.id && event.end > newStart && event.start < newEnd
             );
-            if (ev) {
+            if (event) {
                 $("#errors").text(
-                    `This collides with the event '${ev.title}'
-                (${ev.start} - ${ev.end}).`
+                    `This collides with the event '${event.title}'
+                (${event.start} - ${event.end}).`
                 );
                 return false;
             }

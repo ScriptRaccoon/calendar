@@ -12,8 +12,8 @@
 <body>
 
     <main>
-        <header id="header">
-            <div id="weekControls">
+        <header class="header">
+            <div class="weekControls">
                 <i id="prevWeekBtn" class="fas fa-angle-double-left"></i>
                 <span id="weekDisplay">
                     <span id="weekStartDisplay"></span>
@@ -24,7 +24,7 @@
     
             </div>
             <h1>Calendar</h1>
-            <div id="controls">
+            <div class="generalControls">
                 <i id="addButton" class="fas fa-plus"></i>
                 <i id="trashButton" class="fas fa-trash-alt"></i>
             </div>
@@ -52,35 +52,35 @@
         <form id="eventModal">
             <h2 id="modalTitle">
             </h2>
-            <label class="descriptor">Title</label>
+            <label class="descriptor" for="title">Title</label>
             <div>
-                <input required type="text" id="eventTitle" class="shortInput"></input>
+                <input required type="text" id="eventTitle" name="title" class="shortInput"></input>
             </div>
-            <label class="descriptor">Date</label>
+            <label class="descriptor" for="date">Date</label>
             <div>
-                <input required type="date" id="eventDate" class="shortInput"></input>
+                <input required type="date" id="eventDate" name="date" class="shortInput"></input>
             </div>
-            <label class="descriptor">Time</label>
+            <label class="descriptor" for="time">Time</label>
             <div>
-                <input required type="time" id="eventStart" class="shortInput"></input>
-                ‒<input required type="time" id="eventEnd" class="shortInput"></input>
+                <input required type="time" id="eventStart" name="time" class="shortInput"></input>
+                ‒<input required type="time" id="eventEnd" name="time" class="shortInput"></input>
             </div>
             
-            <label>
+            <label for="description">
                 Description
             </label>
             <div>
-                <textarea id="eventDescription">
+                <textarea id="eventDescription" name="description">
                 </textarea>
             </div>        
-            <label>
+            <label for="color">
                 Color
             </label>
             <div id="colors">
-                <div class="color color-red" data-color = "red"></div>
-                <div class="color color-blue" data-color = "blue"></div>
-                <div class="color color-green" data-color = "green"></div>
-                <div class="color color-orange" data-color = "orange"></div>
+                <input type="button" name="color" value="" class="color color-red" data-color = "red"></input>
+                <input type="button" name="color" value="" class="color color-blue" data-color = "blue"></input>
+                <input type="button" name="color" value="" class="color color-green" data-color = "green"></input>
+                <input type="button" name="color" value="" class="color color-orange" data-color = "orange"></input>
             </div>      
             <div id="eventControls">
                 <input type="submit" value="Submit" class="button" id="submitButton">

@@ -1,15 +1,16 @@
 import { dateString, getDayIndex, addDays } from "./helper.js";
-import { Event } from "./Event.js";
+import { Event, MODE } from "./Event.js";
 
 export class Calendar {
     constructor() {
-        this.mode = "view";
+        this.mode = MODE.VIEW;
         this.events = {};
         this.weekOffset = 0;
         this.readyToTrash = false;
         this.slotHeight = 30;
         this.weekStart = null;
         this.weekEnd = null;
+        this.eventsLoaded = false;
     }
 
     setup() {
@@ -17,8 +18,17 @@ export class Calendar {
         this.setupDays();
         this.calculateCurrentWeek();
         this.showWeek();
-        this.loadEventsFromLocalStorage(true);
+        this.loadEvents();
         this.setupControls();
+    }
+
+    setupControls() {
+        $("#nextWeekBtn").click(() => this.changeWeek(1));
+        $("#prevWeekBtn").click(() => this.changeWeek(-1));
+        $("#addButton").click(() => this.addNewEvent());
+        $("#trashButton").click(() => this.trash());
+        $("#cancelButton").click(() => this.closeModal());
+        $(".color").click(this.changeColor);
     }
 
     setupTimes() {
@@ -40,16 +50,13 @@ export class Calendar {
             const dayIndex = parseInt($(this).attr("data-dayIndex"));
             const name = $(this).attr("data-name");
             const header = $("<div></div>").addClass("columnHeader").text(name);
-            const slots = $("<div></div>")
-                .addClass("slots")
-                .attr("data-dayIndex", dayIndex);
+            const slots = $("<div></div>").addClass("slots");
             $("<div></div>").addClass("dayDisplay").appendTo(header);
             for (let hour = 0; hour < 24; hour++) {
                 $("<div></div>")
                     .attr("data-hour", hour)
                     .appendTo(slots)
                     .addClass("slot")
-                    .attr("data-dayIndex", dayIndex)
                     .click(() => cal.clickSlot(hour, dayIndex))
                     .hover(
                         () => cal.hoverOver(hour),
@@ -62,18 +69,8 @@ export class Calendar {
 
     calculateCurrentWeek() {
         const now = new Date();
-        const firstDay = now.getDate() - getDayIndex(now);
-        this.weekStart = new Date(now.setDate(firstDay));
-        this.weekEnd = new Date(now.setDate(firstDay + 6));
-    }
-
-    setupControls() {
-        $("#nextWeekBtn").click(() => this.changeWeek(1));
-        $("#prevWeekBtn").click(() => this.changeWeek(-1));
-        $("#addButton").click(() => this.addNewEvent());
-        $("#trashButton").click(() => this.trash());
-        $("#cancelButton").click(() => this.closeModal());
-        $(".color").click(this.changeColor);
+        this.weekStart = addDays(now, -getDayIndex(now));
+        this.weekEnd = addDays(this.weekStart, 6);
     }
 
     changeWeek(number) {
@@ -81,7 +78,7 @@ export class Calendar {
         this.weekStart = addDays(this.weekStart, 7 * number);
         this.weekEnd = addDays(this.weekEnd, 7 * number);
         this.showWeek();
-        this.loadEventsFromLocalStorage();
+        this.loadEvents();
     }
 
     showWeek() {
@@ -129,8 +126,8 @@ export class Calendar {
     }
 
     clickSlot(hour, dayIndex) {
-        if (this.mode != "view") return;
-        this.mode = "create";
+        if (this.mode != MODE.VIEW) return;
+        this.mode = MODE.CREATE;
         const start = hour.toString().padStart(2, "0") + ":00";
         const end =
             hour < 23
@@ -150,32 +147,32 @@ export class Calendar {
     }
 
     changeColor() {
-        $(".color.active").removeClass("active");
+        $(".color").removeClass("active");
         $(this).addClass("active");
     }
 
     openModal(event) {
         $("#modalTitle").text(
-            this.mode == "edit" ? "Update your event" : "Create a new event"
+            this.mode == MODE.EDIT ? "Update your event" : "Create a new event"
         );
+        $("#eventTitle").val(event.title);
         $("#eventDate").val(event.date);
         $("#eventStart").val(event.start);
         $("#eventEnd").val(event.end);
-        $("#eventTitle").val(event.title);
         $("#eventDescription").val(event.description);
         $(".color").removeClass("active");
         $(`.color[data-color=${event.color}]`).addClass("active");
-        if (this.mode == "edit") {
+        if (this.mode == MODE.EDIT) {
             $("#submitButton").val("Update");
             $("#deleteButton")
                 .show()
                 .off("click")
-                .click(() => event.delete(this));
+                .click(() => event.deleteIn(this));
             $("#copyButton")
                 .show()
                 .off("click")
-                .click(() => event.copy(this));
-        } else if (this.mode == "create") {
+                .click(() => event.copyIn(this));
+        } else if (this.mode == MODE.EDIT) {
             $("#submitButton").val("Create");
             $("#deleteButton, #copyButton").hide();
         }
@@ -191,26 +188,26 @@ export class Calendar {
     }
 
     submitModal(event) {
-        if (!event.isValid(this)) return;
-        event.update(this);
-        this.closeModal();
+        if (event.isValidIn(this)) {
+            event.updateIn(this);
+            this.closeModal();
+        }
     }
 
     closeModal() {
         $("#eventModal").fadeOut(200);
         $("#errors").text("");
         $("#calendar").removeClass("opaque");
-        this.mode = "view";
+        this.mode = MODE.VIEW;
     }
 
     addNewEvent() {
-        if (this.mode != "view") return;
-        this.mode = "create";
-        const now = new Date();
+        if (this.mode != MODE.VIEW) return;
+        this.mode = MODE.CREATE;
         const event = new Event({
             start: "12:00",
             end: "13:00",
-            date: dateString(now),
+            date: dateString(this.weekStart),
             title: "",
             description: "",
             color: "red",
@@ -218,13 +215,13 @@ export class Calendar {
         this.openModal(event);
     }
 
-    saveEventsToLocalStorage() {
+    saveEvents() {
         localStorage.setItem("events", JSON.stringify(this.events));
     }
 
-    loadEventsFromLocalStorage(firstTime = false) {
+    loadEvents() {
         $(".event").remove();
-        if (firstTime) {
+        if (!this.eventsLoaded) {
             this.events = JSON.parse(localStorage.getItem("events"));
             if (this.events) {
                 for (const date of Object.keys(this.events)) {
@@ -234,13 +231,14 @@ export class Calendar {
                     }
                 }
             }
+            this.eventsLoaded = true;
         }
         if (this.events) {
             for (let dayIndex = 0; dayIndex < 7; dayIndex++) {
                 const date = dateString(addDays(this.weekStart, dayIndex));
                 if (this.events[date]) {
                     for (const event of Object.values(this.events[date])) {
-                        event.show(this);
+                        event.showIn(this);
                     }
                 }
             }
@@ -250,11 +248,11 @@ export class Calendar {
     }
 
     trash() {
-        if (this.mode != "view") return;
+        if (this.mode != MODE.VIEW) return;
         if (this.readyToTrash) {
             this.readyToTrash = false;
             this.events = {};
-            this.saveEventsToLocalStorage();
+            this.saveEvents();
             $(".event").remove();
         } else {
             this.readyToTrash = true;
